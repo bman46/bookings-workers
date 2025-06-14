@@ -1,7 +1,7 @@
-export async function requestMicrosoftGraphJwt(): Promise<string> {
-    const tenantId = process.env.TENANT_ID;
-    const clientId = process.env.CLIENT_ID;
-    const clientSecret = process.env.CLIENT_SECRET;
+export async function requestMicrosoftGraphJwt(env?: Record<string, string>): Promise<string> {
+    const tenantId = env.TENANT_ID;
+    const clientId = env.CLIENT_ID;
+    const clientSecret = env.CLIENT_SECRET;
     const scope = 'https://graph.microsoft.com/.default';
 
     if (!tenantId || !clientId || !clientSecret) {
