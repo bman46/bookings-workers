@@ -2,8 +2,9 @@ import { fromHono } from "chanfana";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { bookingBusinessesFetch } from "./endpoints/bookingBusinessesFetch";
-import { serviceList } from "./endpoints/serviceListFetch";
-import { StaffAvailabilityFetch } from "./endpoints/StaffAvailabilityFetch";
+import { ServiceList } from "./endpoints/serviceListFetch";
+import { StaffAvailabilityFetch } from "./endpoints/staffAvailabilityFetch";
+import { CustomQuestionsFetch } from "./endpoints/customQuestionsFetch";
 
 // Start a Hono app
 const app = new Hono<{ Bindings: Env }>();
@@ -41,10 +42,14 @@ const openapi = fromHono(app, {
 
 // Register OpenAPI endpoints
 openapi.get("/api/tasks/:bookingBusinessesSlug", bookingBusinessesFetch);
-openapi.get("/api/tasks/:bookingBusinessesSlug/services", serviceList);
+openapi.get("/api/tasks/:bookingBusinessesSlug/services", ServiceList);
 openapi.post(
   "/solutions/bookingBusinesses/:bookingBusinessesSlug/staffAvailability",
   StaffAvailabilityFetch
+);
+openapi.get(
+  "/solutions/bookingBusinesses/:bookingBusinessesSlug/customQuestions",
+  CustomQuestionsFetch
 );
 
 // Export the Hono app

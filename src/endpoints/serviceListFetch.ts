@@ -3,7 +3,7 @@ import { z } from "zod";
 import { type AppContext, service } from "../types/service";
 import { requestMicrosoftGraphJwt } from "../utils/microsoftAuth";
 
-export class serviceList extends OpenAPIRoute {
+export class ServiceList extends OpenAPIRoute {
 	schema = {
 		tags: ["services"],
 		summary: "Get services for a bookingBusinesses by slug",
