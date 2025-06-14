@@ -1,5 +1,6 @@
 import { Str, Bool, Num } from "chanfana";
 import { z } from "zod";
+import { DateTimeObject, Location, ContactInfo, Reminder, BaseCustomQuestionAnswer } from "./generic";
 
 export const AppointmentCustomer = z.object({
     customerId: Str().optional(),
@@ -7,34 +8,11 @@ export const AppointmentCustomer = z.object({
     emailAddress: Str({ example: "john@example.com" }),
     phone: Str().optional(),
     notes: Str().optional(),
-    location: z.object({
-        address: z.object({
-            street: Str().optional(),
-            city: Str().optional(),
-            state: Str().optional(),
-            countryOrRegion: Str().optional(),
-            postalCode: Str().optional(),
-        }).optional(),
-        coordinates: z.object({
-            latitude: Num().optional(),
-            longitude: Num().optional(),
-        }).optional(),
-        displayName: Str().optional(),
-        locationEmailAddress: Str().optional(),
-        locationType: Str().optional(),
-        locationUri: Str().optional(),
-        uniqueId: Str().optional(),
-        uniqueIdType: Str().optional(),
-    }).optional(),
+    location: Location.optional(),
     timeZone: Str().optional(),
 });
 
-export const AppointmentCustomQuestionAnswer = z.object({
-    questionId: Str({ example: "3bc6fde0-4ad3-445d-ab17-0fc15dba0774" }),
-    question: Str({ example: "What is your preferred appointment time?" }),
-    answerInputType: Str({ example: "text" }),
-    answerOptions: z.array(Str()).optional(),
-    isRequired: Bool().optional(),
+export const AppointmentCustomQuestionAnswer = BaseCustomQuestionAnswer.extend({
     answer: Str({ example: "Morning preferred" }),
     answerId: Str().optional(),
     selectedOptions: z.array(Str()).optional(),
@@ -43,14 +21,8 @@ export const AppointmentCustomQuestionAnswer = z.object({
 export const CreateAppointmentRequest = z.object({
     customerTimeZone: Str({ example: "America/Chicago" }),
     smsNotificationsEnabled: Bool().optional(),
-    startDateTime: z.object({
-        dateTime: Str({ example: "2018-05-01T12:00:00.0000000+00:00" }),
-        timeZone: Str({ example: "UTC" }),
-    }),
-    endDateTime: z.object({
-        dateTime: Str({ example: "2018-05-01T12:30:00.0000000+00:00" }),
-        timeZone: Str({ example: "UTC" }),
-    }),
+    startDateTime: DateTimeObject,
+    endDateTime: DateTimeObject,
     isLocationOnline: Bool().optional(),
     optOutOfCustomerEmail: Bool().optional(),
     anonymousJoinWebUrl: Str().optional(),
@@ -58,32 +30,10 @@ export const CreateAppointmentRequest = z.object({
     preBuffer: Str().optional(),
     price: Num().optional(),
     priceType: Str().optional(),
-    reminders: z.array(z.object({
-        message: Str(),
-        offset: Str(),
-        recipients: Str(),
-    })).optional(),
+    reminders: z.array(Reminder).optional(),
     selfServiceAppointmentId: Str().optional(),
     serviceId: Str({ example: "57da6774-a087-4d69-b0e6-6fb82c339976" }),
-    serviceLocation: z.object({
-        address: z.object({
-            street: Str().optional(),
-            city: Str().optional(),
-            state: Str().optional(),
-            countryOrRegion: Str().optional(),
-            postalCode: Str().optional(),
-        }).optional(),
-        coordinates: z.object({
-            latitude: Num().optional(),
-            longitude: Num().optional(),
-        }).optional(),
-        displayName: Str().optional(),
-        locationEmailAddress: Str().optional(),
-        locationType: Str().optional(),
-        locationUri: Str().optional(),
-        uniqueId: Str().optional(),
-        uniqueIdType: Str().optional(),
-    }).optional(),
+    serviceLocation: Location.optional(),
     serviceName: Str({ example: "Haircut" }),
     serviceNotes: Str().optional(),
     maximumAttendeesCount: Num().optional(),
@@ -100,6 +50,7 @@ export const AppointmentResponse = z.object({
     joinWebUrl: Str().optional(),
     onlineMeetingUrl: Str().optional(),
     smsNotificationsEnabled: Bool(),
+    customerTimeZone: Str(),
     serviceId: Str(),
     serviceName: Str(),
     duration: Str(),
@@ -114,67 +65,21 @@ export const AppointmentResponse = z.object({
     lastUpdatedDateTime: Str(),
     customerEmailAddress: Str(),
     customerId: Str().optional(),
-    customerLocation: z.object({
-        address: z.object({
-            street: Str().optional(),
-            city: Str().optional(),
-            state: Str().optional(),
-            countryOrRegion: Str().optional(),
-            postalCode: Str().optional(),
-        }).optional(),
-        coordinates: z.object({
-            latitude: Num().optional(),
-            longitude: Num().optional(),
-        }).optional(),
-        displayName: Str().optional(),
-        locationEmailAddress: Str().optional(),
-        locationType: Str().optional(),
-        locationUri: Str().optional(),
-        uniqueId: Str().optional(),
-        uniqueIdType: Str().optional(),
-    }).optional(),
+    customerLocation: Location.optional(),
     customerName: Str(),
     customerNotes: Str().optional(),
     customerPhone: Str().optional(),
-    customerTimeZone: Str(),
     customers: z.array(AppointmentCustomer),
     customQuestionAnswers: z.array(AppointmentCustomQuestionAnswer).optional(),
-    endDateTime: z.object({
-        dateTime: Str(),
-        timeZone: Str(),
-    }),
+    endDateTime: DateTimeObject,
     invoiceAmount: Num().optional(),
-    invoiceDate: z.object({
-        dateTime: Str(),
-        timeZone: Str(),
-    }).optional(),
+    invoiceDate: DateTimeObject.optional(),
     invoiceId: Str().optional(),
     invoiceStatus: Str().optional(),
     invoiceUrl: Str().optional(),
     maximumAttendeesCount: Num().optional(),
     filledAttendeesCount: Num().optional(),
-    serviceLocation: z.object({
-        address: z.object({
-            street: Str().optional(),
-            city: Str().optional(),
-            state: Str().optional(),
-            countryOrRegion: Str().optional(),
-            postalCode: Str().optional(),
-        }).optional(),
-        coordinates: z.object({
-            latitude: Num().optional(),
-            longitude: Num().optional(),
-        }).optional(),
-        displayName: Str().optional(),
-        locationEmailAddress: Str().optional(),
-        locationType: Str().optional(),
-        locationUri: Str().optional(),
-        uniqueId: Str().optional(),
-        uniqueIdType: Str().optional(),
-    }).optional(),
+    serviceLocation: Location.optional(),
     staffMemberIds: z.array(Str()).optional(),
-    startDateTime: z.object({
-        dateTime: Str(),
-        timeZone: Str(),
-    }),
+    startDateTime: DateTimeObject,
 });

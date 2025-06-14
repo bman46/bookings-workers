@@ -1,13 +1,9 @@
 import { Str } from "chanfana";
 import type { Context } from "hono";
 import { z } from "zod";
+import { DateTimeObject } from "./generic";
 
 export type AppContext = Context<{ Bindings: Env }>;
-
-export const DateTimeObject = z.object({
-    dateTime: Str({ example: "2025-06-14T09:00:00" }),
-    timeZone: Str({ example: "(UTC-05:00) Eastern Time (US & Canada)" }),
-});
 
 export const AvailabilityItem = z.object({
     status: Str({ example: "available" }), // "available", "busy", "outOfOffice", etc.
