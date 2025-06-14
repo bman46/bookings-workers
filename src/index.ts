@@ -3,8 +3,9 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { bookingBusinessesFetch } from "./endpoints/bookingBusinessesFetch";
 import { ServiceList } from "./endpoints/serviceListFetch";
-import { StaffAvailabilityFetch } from "./endpoints/staffAvailabilityFetch";
+import { StaffAvailabilityFetch } from "./endpoints/StaffAvailabilityFetch";
 import { CustomQuestionsFetch } from "./endpoints/customQuestionsFetch";
+import { AppointmentCreate } from "./endpoints/appointmentCreate";
 
 // Start a Hono app
 const app = new Hono<{ Bindings: Env }>();
@@ -50,6 +51,10 @@ openapi.post(
 openapi.get(
   "/solutions/bookingBusinesses/:bookingBusinessesSlug/customQuestions",
   CustomQuestionsFetch
+);
+openapi.post(
+  "/solutions/bookingBusinesses/:bookingBusinessesSlug/appointments",
+  AppointmentCreate
 );
 
 // Export the Hono app
