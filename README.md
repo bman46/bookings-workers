@@ -1,9 +1,6 @@
-# Cloudflare Workers OpenAPI 3.1
+# Microsoft Bookings API
 
-This is a Cloudflare Worker with OpenAPI 3.1 using [chanfana](https://github.com/cloudflare/chanfana) and [Hono](https://github.com/honojs/hono).
-
-This is an example project made to be used as a quick start into building OpenAPI compliant Workers that generates the
-`openapi.json` schema automatically from code and validates the incoming request to the defined parameters or request body.
+This project is designed to enable a custom frontend with Microsoft 365 Bookings. It is designed to be OpenAPI compliant for easy integration with the frontend.
 
 ## Get started
 
@@ -11,12 +8,6 @@ This is an example project made to be used as a quick start into building OpenAP
 2. Clone this project and install dependencies with `npm install`
 3. Run `wrangler login` to login to your Cloudflare account in wrangler
 4. Run `wrangler deploy` to publish the API to Cloudflare Workers
-
-## Project structure
-
-1. Your main router is defined in `src/index.ts`.
-2. Each endpoint has its own file in `src/endpoints/`.
-3. For more information read the [chanfana documentation](https://chanfana.pages.dev/) and [Hono documentation](https://hono.dev/docs).
 
 ## Development
 

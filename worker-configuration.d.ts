@@ -5,7 +5,10 @@ declare namespace Cloudflare {
 	interface Env {
 	}
 }
-interface Env extends Cloudflare.Env {}
+interface Env extends Cloudflare.Env {
+	ENABLE_SWAGGER_DOCS: string;
+	ALLOWED_ORIGINS: any;
+}
 
 // Begin runtime types
 /*! *****************************************************************************
