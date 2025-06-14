@@ -42,8 +42,5 @@ const openapi = fromHono(app, {
 openapi.get("/api/tasks/:bookingBusinessesSlug", bookingBusinessesFetch);
 openapi.get("/api/tasks/:bookingBusinessesSlug/services", serviceList);
 
-// You may also register routes for non OpenAPI directly on Hono
-// app.get('/test', (c) => c.text('Hono!'))
-
 // Export the Hono app
 export default app;
