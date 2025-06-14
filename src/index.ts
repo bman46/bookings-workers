@@ -2,7 +2,7 @@ import { fromHono } from "chanfana";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { bookingBusinessesFetch } from "./endpoints/bookingBusinessesFetch";
-import { serviceList } from "./endpoints/serviceList";
+import { serviceList } from "./endpoints/serviceListFetch";
 
 // Start a Hono app
 const app = new Hono<{ Bindings: Env }>();
