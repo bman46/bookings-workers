@@ -18,6 +18,7 @@ export const CustomerObject = z.object({
     emailAddress: Str({ example: "test@test.com" }),
     phone: Str({ example: "8888888888" }),
     customQuestionAnswers: z.array(bookingQuestionAnswer).optional(),
+    notes: Str({ example: "No mayo on the sandwiches" }).optional(),
 });
 
 export const AppointmentObject = z.object({
