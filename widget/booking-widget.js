@@ -699,21 +699,14 @@ class BookingWidget extends HTMLElement {
             // Collect custom question answers
             const customAnswers = this.collectCustomAnswers();
             
-            // Build the booking form info list
-            const bookingFormInfoList = [
-                { questionId: 'name', answerText: name },
-                { questionId: 'email', answerText: email },
-                { questionId: 'phone', answerText: phone }
-            ];
-            
-            // Add custom question answers to the form info list
-            Object.entries(customAnswers).forEach(([questionId, answer]) => {
-                if (answer) {
-                    bookingFormInfoList.push({
-                        questionId: questionId,
-                        answerText: answer.toString()
-                    });
-                }
+            // Transform custom answers to match the expected schema
+            const customQuestionAnswers = Object.entries(customAnswers).map(([questionId, answer]) => {
+                return {
+                    "@odata.type": "#microsoft.graph.bookingQuestionAnswer",
+                    questionId: questionId,
+                    answer: typeof answer === 'string' ? answer : "",
+                    selectedOptions: Array.isArray(answer) ? answer : []
+                };
             });
             
             // Calculate end time based on service duration
@@ -721,33 +714,33 @@ class BookingWidget extends HTMLElement {
             const serviceDurationMs = BookingUtils.getServiceDurationMinutes(this.selectedServiceData.defaultDuration) * 60 * 1000;
             const endTime = new Date(startTime.getTime() + serviceDurationMs);
             
+            // Create the appointment object following the schema
             const bookingData = {
                 serviceId: this.selectedService,
-                start: {
+                startDateTime: {
                     dateTime: startTime.toISOString().slice(0, 19),
-                    timeZone: this.selectedDateTime.timeZone
+                    timeZone: this.convertToGraphTimezone(this.selectedDateTime.timeZone)
                 },
-                end: {
+                endDateTime: {
                     dateTime: endTime.toISOString().slice(0, 19),
-                    timeZone: this.selectedDateTime.timeZone
+                    timeZone: this.convertToGraphTimezone(this.selectedDateTime.timeZone)
                 },
-                customerName: name,
-                customerEmailAddress: email,
-                customerPhone: phone,
-                customerTimeZone: this.selectedDateTime.timeZone,
-                duration: this.selectedServiceData.defaultDuration,
-                isLocationOnline: false,
-                smsNotificationsEnabled: true,
-                price: this.selectedServiceData.defaultPrice || 0,
-                priceType: this.selectedServiceData.defaultPriceType || 'free',
-                customerNotes: notes,
                 staffMemberIds: [this.selectedDateTime.staffId],
+                smsNotificationsEnabled: true,
+                customers: [{
+                    "@odata.type": "#microsoft.graph.bookingCustomerInformation",
+                    name: name,
+                    emailAddress: email,
+                    phone: phone,
+                    notes: notes,
+                    customQuestionAnswers: customQuestionAnswers.length > 0 ? customQuestionAnswers : undefined
+                }]
             };
 
             console.log('Sending booking data:', bookingData);
             
-            const result = await this.api.createAppointment(bookingData);
-            this.showSuccessMessage('Your booking has been confirmed!', result);
+            const { response, result } = await this.api.createAppointment(bookingData);
+            this.showSuccessMessage('Your booking has been confirmed!', result.results);
             
         } catch (error) {
             console.error('Booking failed:', error);
@@ -798,16 +791,41 @@ class BookingWidget extends HTMLElement {
         
         customQuestionInputs.forEach(input => {
             const questionId = input.name.replace('custom-', '');
+            
+            // Handle different input types appropriately
             if (input.type === 'radio') {
                 if (input.checked) {
-                    answers[questionId] = input.value;
+                    // For radio buttons, we use selectedOptions array
+                    answers[questionId] = {
+                        answer: "",
+                        selectedOptions: [input.value]
+                    };
+                }
+            } else if (input.type === 'checkbox') {
+                if (input.checked) {
+                    // For checkboxes, append to selectedOptions
+                    if (!answers[questionId]) {
+                        answers[questionId] = {
+                            answer: "",
+                            selectedOptions: []
+                        };
+                    }
+                    answers[questionId].selectedOptions.push(input.value);
                 }
             } else {
-                answers[questionId] = input.value;
+                // For text inputs, use answer field
+                answers[questionId] = {
+                    answer: input.value,
+                    selectedOptions: []
+                };
             }
         });
         
-        return answers;
+        // Convert to simpler format for the submitBooking function
+        return Object.entries(answers).reduce((acc, [id, data]) => {
+            acc[id] = data.answer ? data.answer : data.selectedOptions;
+            return acc;
+        }, {});
     }
 
     showSuccessMessage(message, bookingData = null) {
