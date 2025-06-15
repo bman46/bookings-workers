@@ -9,7 +9,8 @@ export const bookingQuestionAnswer = z.object({
     "@odata.type": Str({ default: "#microsoft.graph.bookingQuestionAnswer" }),
     answer: Str({ example: "I really like ice cream" }).optional(),
     questionId: Str({ example: "uuid-12313" }),
-    selectedOptions: z.array(Str({ example: "option1" }))
+    selectedOptions: z.array(Str({ example: "option1" })),
+    answerInputType: Str({ example: "text" }),
 });
 
 export const CustomerObject = z.object({
