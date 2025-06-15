@@ -19,10 +19,8 @@ export class CustomQuestionsFetch extends OpenAPIRoute {
                 content: {
                     "application/json": {
                         schema: z.object({
-                            series: z.object({
-                                success: Bool(),
-                                results: z.array(CustomQuestion),
-                            }),
+                            success: Bool(),
+                            results: z.array(CustomQuestion),
                         }),
                     },
                 },
@@ -32,10 +30,8 @@ export class CustomQuestionsFetch extends OpenAPIRoute {
                 content: {
                     "application/json": {
                         schema: z.object({
-                            series: z.object({
-                                success: Bool(),
-                                error: Str(),
-                            }),
+                            success: Bool(),
+                            error: Str(),
                         }),
                     },
                 },
@@ -69,11 +65,9 @@ export class CustomQuestionsFetch extends OpenAPIRoute {
             console.error("Graph API error:", errorBody);
             return Response.json(
                 {
-                    series: {
-                        success: false,
-                        error: "Object not found",
-                        details: errorBody,
-                    },
+                    success: false,
+                    error: "Object not found",
+                    details: errorBody,
                 },
                 {
                     status: 404,
@@ -90,11 +84,9 @@ export class CustomQuestionsFetch extends OpenAPIRoute {
             console.error("Expected schema vs actual data mismatch");
             return Response.json(
                 {
-                    series: {
-                        success: false,
-                        error: "Invalid response format from Microsoft Graph API",
-                        details: parseResult.error.issues,
-                    },
+                    success: false,
+                    error: "Invalid response format from Microsoft Graph API",
+                    details: parseResult.error.issues,
                 },
                 { status: 500 }
             );
@@ -104,10 +96,8 @@ export class CustomQuestionsFetch extends OpenAPIRoute {
 
         return Response.json(
             {
-                series: {
-                    success: true,
-                    results: customQuestionsResponse,
-                },
+                success: true,
+                results: customQuestionsResponse,
             },
             {
                 status: 200,

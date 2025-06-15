@@ -18,10 +18,8 @@ export class ServiceList extends OpenAPIRoute {
 				content: {
 					"application/json": {
 						schema: z.object({
-							series: z.object({
-								success: Bool(),
-								results: z.array(service),
-							}),
+							success: Bool(),
+							results: z.array(service),
 						}),
 					},
 				},
@@ -31,10 +29,8 @@ export class ServiceList extends OpenAPIRoute {
 				content: {
 					"application/json": {
 						schema: z.object({
-							series: z.object({
-								success: Bool(),
-								error: Str(),
-							}),
+							success: Bool(),
+							error: Str(),
 						}),
 					},
 				},
@@ -70,11 +66,9 @@ export class ServiceList extends OpenAPIRoute {
 			console.error("Graph API error:", errorBody);
 			return Response.json(
 				{
-					series: {
-						success: false,
-						error: "Object not found",
-						details: errorBody,
-					},
+					success: false,
+					error: "Object not found",
+					details: errorBody,
 				},
 				{
 					status: 404,
@@ -91,10 +85,8 @@ export class ServiceList extends OpenAPIRoute {
 		if (!parsedServices.success) {
 			return Response.json(
 				{
-					series: {
-						success: false,
-						error: "Invalid service object structure",
-					},
+					success: false,
+					error: "Invalid service object structure",
 				},
 				{
 					status: 500,

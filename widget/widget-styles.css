@@ -1,0 +1,19 @@
+/* Optional external styles for the widget */
+booking-widget {
+    --primary-color: #007bff;
+    --primary-hover: #0056b3;
+    --border-color: #e0e0e0;
+    --background-color: white;
+    --text-color: #333;
+    --secondary-text: #666;
+    --error-color: #dc3545;
+    --success-color: #28a745;
+}
+
+/* Responsive design for the widget */
+@media (max-width: 480px) {
+    booking-widget {
+        max-width: 100%;
+        margin: 0;
+    }
+}

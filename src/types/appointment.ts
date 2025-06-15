@@ -1,85 +1,32 @@
-import { Str, Bool, Num } from "chanfana";
+import { Str } from "chanfana";
+import type { Context } from "hono";
 import { z } from "zod";
-import { DateTimeObject, Location, ContactInfo, Reminder, BaseCustomQuestionAnswer } from "./generic";
+import { DateTimeObject } from "./generic";
 
-export const AppointmentCustomer = z.object({
-    customerId: Str().optional(),
-    displayName: Str({ example: "John Doe" }),
-    emailAddress: Str({ example: "john@example.com" }),
-    phone: Str().optional(),
-    notes: Str().optional(),
-    location: Location.optional(),
-    timeZone: Str().optional(),
+export type AppContext = Context<{ Bindings: Env }>;
+
+export const bookingQuestionAnswer = z.object({
+    "@odata.type": Str({ default: "#microsoft.graph.bookingQuestionAnswer" }),
+    answer: Str({ example: "I really like ice cream" }).optional(),
+    questionId: Str({ example: "uuid-12313" }),
+    selectedOptions: z.array(Str({ example: "option1" }))
 });
 
-export const AppointmentCustomQuestionAnswer = BaseCustomQuestionAnswer.extend({
-    answer: Str({ example: "Morning preferred" }),
-    answerId: Str().optional(),
-    selectedOptions: z.array(Str()).optional(),
+export const CustomerObject = z.object({
+    "@odata.type": Str({ default: "#microsoft.graph.bookingCustomerInformation" }),
+    name: Str({ example: "John Doe" }),
+    emailAddress: Str({ example: "test@test.com" }),
+    phone: Str({ example: "8888888888" }),
+    customQuestionAnswers: z.array(bookingQuestionAnswer).optional(),
 });
 
-export const CreateAppointmentRequest = z.object({
-    customerTimeZone: Str({ example: "America/Chicago" }),
-    smsNotificationsEnabled: Bool().optional(),
-    startDateTime: DateTimeObject,
+export const AppointmentObject = z.object({
+    serviceId: Str({ example: "uuid-213-23" }),
+    staffMemberIds: z.array(Str({ example: "uuid-12023-123" })),
     endDateTime: DateTimeObject,
-    isLocationOnline: Bool().optional(),
-    optOutOfCustomerEmail: Bool().optional(),
-    anonymousJoinWebUrl: Str().optional(),
-    postBuffer: Str().optional(),
-    preBuffer: Str().optional(),
-    price: Num().optional(),
-    priceType: Str().optional(),
-    reminders: z.array(Reminder).optional(),
-    selfServiceAppointmentId: Str().optional(),
-    serviceId: Str({ example: "57da6774-a087-4d69-b0e6-6fb82c339976" }),
-    serviceLocation: Location.optional(),
-    serviceName: Str({ example: "Haircut" }),
-    serviceNotes: Str().optional(),
-    maximumAttendeesCount: Num().optional(),
-    filledAttendeesCount: Num().optional(),
-    customers: z.array(AppointmentCustomer),
-    customQuestionAnswers: z.array(AppointmentCustomQuestionAnswer).optional(),
-    staffMemberIds: z.array(Str()).optional(),
-});
-
-export const AppointmentResponse = z.object({
-    id: Str(),
-    selfServiceAppointmentId: Str().optional(),
-    isLocationOnline: Bool(),
-    joinWebUrl: Str().optional(),
-    onlineMeetingUrl: Str().optional(),
-    smsNotificationsEnabled: Bool(),
-    customerTimeZone: Str(),
-    serviceId: Str(),
-    serviceName: Str(),
-    duration: Str(),
-    preBuffer: Str(),
-    postBuffer: Str(),
-    priceType: Str().optional(),
-    price: Num(),
-    serviceNotes: Str().optional(),
-    optOutOfCustomerEmail: Bool(),
-    anonymousJoinWebUrl: Str().optional(),
-    createdDateTime: Str(),
-    lastUpdatedDateTime: Str(),
-    customerEmailAddress: Str(),
-    customerId: Str().optional(),
-    customerLocation: Location.optional(),
-    customerName: Str(),
-    customerNotes: Str().optional(),
-    customerPhone: Str().optional(),
-    customers: z.array(AppointmentCustomer),
-    customQuestionAnswers: z.array(AppointmentCustomQuestionAnswer).optional(),
-    endDateTime: DateTimeObject,
-    invoiceAmount: Num().optional(),
-    invoiceDate: DateTimeObject.optional(),
-    invoiceId: Str().optional(),
-    invoiceStatus: Str().optional(),
-    invoiceUrl: Str().optional(),
-    maximumAttendeesCount: Num().optional(),
-    filledAttendeesCount: Num().optional(),
-    serviceLocation: Location.optional(),
-    staffMemberIds: z.array(Str()).optional(),
     startDateTime: DateTimeObject,
+    isCustomerAllowedToManageBooking: z.boolean().optional(),
+    optOutOfCustomerEmail: z.boolean().optional(),
+    smsNotificationsEnabled: z.boolean().optional(),
+    customers: z.array(CustomerObject),
 });

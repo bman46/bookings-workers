@@ -2,7 +2,7 @@ import { Bool, OpenAPIRoute, Str } from "chanfana";
 import { z } from "zod";
 import { type AppContext } from "../types/service";
 import { requestMicrosoftGraphJwt } from "../utils/microsoftAuth";
-import { CreateAppointmentRequest, AppointmentResponse } from "../types/appointment";
+import { AppointmentObject } from "../types/appointment";
 
 export class AppointmentCreate extends OpenAPIRoute {
     schema = {
@@ -15,7 +15,7 @@ export class AppointmentCreate extends OpenAPIRoute {
             body: {
                 content: {
                     "application/json": {
-                        schema: CreateAppointmentRequest,
+                        schema: AppointmentObject,
                     },
                 },
             },
@@ -26,10 +26,8 @@ export class AppointmentCreate extends OpenAPIRoute {
                 content: {
                     "application/json": {
                         schema: z.object({
-                            series: z.object({
-                                success: Bool(),
-                                results: AppointmentResponse,
-                            }),
+                            success: Bool(),
+                            results: AppointmentObject,
                         }),
                     },
                 },
@@ -39,10 +37,8 @@ export class AppointmentCreate extends OpenAPIRoute {
                 content: {
                     "application/json": {
                         schema: z.object({
-                            series: z.object({
-                                success: Bool(),
-                                error: Str(),
-                            }),
+                            success: Bool(),
+                            error: Str(),
                         }),
                     },
                 },
@@ -52,10 +48,8 @@ export class AppointmentCreate extends OpenAPIRoute {
                 content: {
                     "application/json": {
                         schema: z.object({
-                            series: z.object({
-                                success: Bool(),
-                                error: Str(),
-                            }),
+                            success: Bool(),
+                            error: Str(),
                         }),
                     },
                 },
@@ -70,6 +64,7 @@ export class AppointmentCreate extends OpenAPIRoute {
         const appointmentData = data.body;
 
         console.log("Creating appointment for bookingBusinessesSlug:", bookingBusinessesSlug);
+        console.log("data: ", appointmentData);
 
         // Fetch from MSFT graph API
         const jwt = await requestMicrosoftGraphJwt(c.env);
@@ -95,11 +90,9 @@ export class AppointmentCreate extends OpenAPIRoute {
             
             return Response.json(
                 {
-                    series: {
-                        success: false,
-                        error: errorMessage,
-                        details: errorBody,
-                    },
+                    success: false,
+                    error: errorMessage,
+                    details: errorBody,
                 },
                 {
                     status: status,
@@ -109,18 +102,16 @@ export class AppointmentCreate extends OpenAPIRoute {
 
         const appointmentResponseData = await response.json();
 
-        const parseResult = AppointmentResponse.safeParse(appointmentResponseData);
+        const parseResult = AppointmentObject.safeParse(appointmentResponseData);
 
         if (!parseResult.success) {
             console.error("Invalid response format:", parseResult.error);
             console.error("Expected schema vs actual data mismatch");
             return Response.json(
                 {
-                    series: {
-                        success: false,
-                        error: "Invalid response format from Microsoft Graph API",
-                        details: parseResult.error.issues,
-                    },
+                    success: false,
+                    error: "Invalid response format from Microsoft Graph API",
+                    details: parseResult.error.issues,
                 },
                 { status: 500 }
             );
@@ -130,10 +121,8 @@ export class AppointmentCreate extends OpenAPIRoute {
 
         return Response.json(
             {
-                series: {
-                    success: true,
-                    results: appointmentResponse,
-                },
+                success: true,
+                results: appointmentResponse,
             },
             {
                 status: 201,

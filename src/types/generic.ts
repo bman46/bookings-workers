@@ -30,6 +30,7 @@ export const schedulingPolicy = z.object({
 
 // Generic DateTime object
 export const DateTimeObject = z.object({
+    "@odata.type": Str({ default: "#microsoft.graph.dateTimeTimeZone" }),
     dateTime: Str({ example: "2025-06-14T09:00:00" }),
     timeZone: Str({ example: "(UTC-05:00) Eastern Time (US & Canada)" }),
 });

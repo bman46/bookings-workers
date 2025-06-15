@@ -1,0 +1,733 @@
+:host {
+    display: block;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    max-width: 800px;
+    margin: 0 auto;
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+.widget-container {
+    padding: 24px;
+}
+
+.widget-header {
+    text-align: center;
+    margin-bottom: 24px;
+}
+
+.widget-title {
+    margin: 0;
+    color: #1a1a1a;
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+/* Step Navigation */
+.step {
+    display: none;
+    padding: 20px;
+}
+
+.step.active {
+    display: block;
+}
+
+.step-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+    gap: 12px;
+}
+
+.btn-back {
+    background: none;
+    border: none;
+    color: #6b7280;
+    font-size: 16px;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 8px;
+    transition: all 0.2s;
+}
+
+.btn-back:hover {
+    background: #f3f4f6;
+    color: #374151;
+}
+
+/* Service Card */
+.service-card {
+    background: #f8fafc;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+    border: 1px solid #e2e8f0;
+}
+
+.service-details h3 {
+    margin: 0 0 16px 0;
+    color: #1a1a1a;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.service-item {
+    display: flex;
+    align-items: center;
+    padding: 16px;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    margin-bottom: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: white;
+}
+
+.service-item:hover {
+    border-color: #3b82f6;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1);
+}
+
+.service-item.selected {
+    border-color: #3b82f6;
+    background: #eff6ff;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.2);
+}
+
+.service-icon {
+    font-size: 24px;
+    margin-right: 12px;
+    min-width: 32px;
+    text-align: center;
+}
+
+.service-info {
+    flex-grow: 1;
+}
+
+.service-name {
+    font-size: 16px;
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 4px;
+}
+
+.service-duration {
+    font-size: 14px;
+    color: #6b7280;
+    margin-bottom: 4px;
+}
+
+.service-description {
+    font-size: 13px;
+    color: #9ca3af;
+    line-height: 1.4;
+}
+
+.service-price {
+    font-size: 16px;
+    font-weight: 600;
+    color: #059669;
+    text-align: right;
+}
+
+.auto-skip-message {
+    text-align: center;
+    margin-top: 8px;
+    padding: 8px;
+    background: #d1fae5;
+    border-radius: 6px;
+    color: #065f46;
+}
+
+.no-services {
+    text-align: center;
+    color: #6b7280;
+    font-style: italic;
+    padding: 20px;
+}
+
+/* Business Card */
+.business-card {
+    display: flex;
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 24px;
+    align-items: center;
+    gap: 16px;
+}
+
+.business-image {
+    width: 80px;
+    height: 80px;
+    border-radius: 12px;
+    background: #e5e7eb;
+    flex-shrink: 0;
+    overflow: hidden;
+}
+
+.business-logo {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(45deg, #3b82f6, #8b5cf6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.business-details h3 {
+    margin: 0 0 8px 0;
+    color: #1a1a1a;
+    font-size: 20px;
+    font-weight: 600;
+}
+
+.business-details p {
+    margin: 0 0 8px 0;
+    color: #6b7280;
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+.business-contact {
+    display: flex;
+    gap: 16px;
+    margin-top: 12px;
+}
+
+.contact-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #6b7280;
+    font-size: 14px;
+    text-decoration: none;
+}
+
+.contact-item:hover {
+    color: #3b82f6;
+}
+
+/* Date & Time Selection */
+.date-section {
+    margin-bottom: 24px;
+}
+
+.date-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+}
+
+.current-week {
+    font-weight: 600;
+    font-size: 16px;
+    color: #333;
+    text-align: center;
+    flex: 1;
+}
+
+/* Add these styles for the date navigation */
+.date-navigation {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 20px 0;
+    padding: 0 10px;
+}
+
+.btn-nav {
+    background: #f5f5f5;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 8px 16px;
+    cursor: pointer;
+    font-size: 14px;
+    color: #333;
+    transition: all 0.2s;
+    min-width: 80px;
+}
+
+.btn-nav:hover {
+    background: #e0e0e0;
+    border-color: #bbb;
+}
+
+.btn-nav:active {
+    background: #d0d0d0;
+}
+
+.date-nav {
+    background: none;
+    border: 1px solid #e2e8f0;
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    color: #6b7280;
+    transition: all 0.2s;
+}
+
+.date-nav:hover {
+    border-color: #3b82f6;
+    color: #3b82f6;
+}
+
+.date-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 8px;
+    margin: 15px 0;
+}
+
+.date-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 12px 8px;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    background: white;
+    cursor: pointer;
+    transition: all 0.2s;
+    min-height: 70px;
+    justify-content: center;
+}
+
+.date-item:hover:not(:disabled) {
+    border-color: #1976d2;
+    background: #f3f8ff;
+}
+
+.date-item.selected {
+    background: #1976d2;
+    border-color: #1976d2;
+    color: white;
+}
+
+.date-item.unavailable,
+.date-item.past {
+    background: #f9f9f9;
+    color: #bbb;
+    cursor: not-allowed;
+}
+
+.date-item.today {
+    border-color: #4caf50;
+    background: #f1f8e9;
+}
+
+.date-item.today.selected {
+    background: #1976d2;
+    color: white;
+}
+
+.date-day {
+    font-size: 12px;
+    font-weight: 500;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+}
+
+.date-number {
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.today-indicator {
+    font-size: 10px;
+    margin-top: 2px;
+    color: #4caf50;
+}
+
+.today-indicator:when(.selected) {
+    color: white;
+}
+
+.time-section h4 {
+    margin: 0 0 16px 0;
+    color: #1a1a1a;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.time-periods {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.time-period h5 {
+    margin: 0 0 12px 0;
+    color: #6b7280;
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.time-slots {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 10px;
+    margin: 15px 0;
+}
+
+.time-slot {
+    padding: 10px;
+    border: 2px solid #e0e0e0;
+    border-radius: 4px;
+    background: white;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.time-slot:hover {
+    border-color: #1976d2;
+    background: #f3f8ff;
+}
+
+.time-slot.selected {
+    border-color: #1976d2;
+    background: #1976d2;
+    color: white;
+}
+
+/* Form Styles */
+.booking-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: #374151;
+    font-size: 14px;
+}
+
+.form-group input,
+.form-group textarea {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #e0e0e0;
+    border-radius: 6px;
+    font-size: 16px;
+    transition: border-color 0.2s;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.form-group textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+/* Booking Summary */
+.booking-summary {
+    background: #f8fafc;
+    border-radius: 12px;
+    padding: 20px;
+    border: 1px solid #e2e8f0;
+}
+
+.booking-summary h4 {
+    margin: 0 0 16px 0;
+    color: #1a1a1a;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.summary-item {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.summary-label {
+    color: #6b7280;
+    font-size: 14px;
+}
+
+.summary-value {
+    color: #1a1a1a;
+    font-weight: 500;
+    font-size: 14px;
+}
+
+/* Buttons */
+.btn {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: all 0.2s;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.btn-primary {
+    background: #1976d2;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #1565c0;
+}
+
+.btn-book {
+    background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+    margin-top: 8px;
+}
+
+.btn-book:hover {
+    background: linear-gradient(135deg, #2563eb, #7c3aed);
+}
+
+.btn-secondary {
+    background: #6b7280;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background: #4b5563;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(107, 114, 128, 0.4);
+}
+
+/* Success Message Styling */
+.success-message {
+    text-align: center;
+    padding: 40px 20px;
+}
+
+.success-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+}
+
+.success-message h3 {
+    color: #28a745;
+    margin-bottom: 12px;
+}
+
+.success-message p {
+    color: #6c757d;
+    margin-bottom: 20px;
+}
+
+.success-details {
+    background: #f8f9fa;
+    padding: 16px;
+    border-radius: 8px;
+    margin-top: 20px;
+}
+
+.success-details p {
+    margin: 8px 0;
+    color: #495057;
+}
+
+/* Custom Questions Styling */
+.custom-question-group {
+    margin-bottom: 20px;
+    padding: 16px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border-left: 4px solid #0066cc;
+}
+
+.custom-question-group label {
+    color: #2d3748;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.radio-group {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 8px;
+}
+
+.radio-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    padding: 8px 12px;
+    border-radius: 6px;
+    transition: background-color 0.2s ease;
+}
+
+.radio-option:hover {
+    background-color: #e2e8f0;
+}
+
+.radio-option input[type="radio"] {
+    margin: 0;
+    width: 16px;
+    height: 16px;
+}
+
+.radio-label {
+    font-size: 14px;
+    color: #4a5568;
+    flex-grow: 1;
+}
+
+.radio-option input[type="radio"]:checked + .radio-label {
+    color: #2d3748;
+    font-weight: 500;
+}
+
+/* Loading and Error States */
+.loading {
+    text-align: center;
+    padding: 40px;
+    font-size: 18px;
+    color: #666;
+}
+
+.error {
+    text-align: center;
+    padding: 20px;
+    color: #d32f2f;
+}
+
+.error-message {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 20px;
+    color: #dc2626;
+    animation: slideDown 0.3s ease-out;
+}
+
+.error-icon {
+    font-size: 18px;
+    flex-shrink: 0;
+}
+
+.error-text {
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+/* Add these styles for the error state */
+.error-state {
+    text-align: center;
+    padding: 40px;
+    color: #d32f2f;
+}
+
+.error-state .error-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+}
+
+.error-state .error-message {
+    font-size: 16px;
+    margin-bottom: 20px;
+    color: #374151;
+}
+
+.no-times {
+    text-align: center;
+    padding: 20px;
+    color: #666;
+    font-style: italic;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Step transition animations */
+.step {
+    opacity: 1;
+    transform: translateX(0);
+    transition: all 0.3s ease-in-out;
+}
+
+.step:not(.active) {
+    display: none;
+}
+
+.step.step-transitioning-out {
+    opacity: 0;
+    transform: translateX(-20px);
+}
+
+.step.step-transitioning-in {
+    display: block;
+    opacity: 0;
+    transform: translateX(20px);
+    animation: slideIn 0.3s ease-in-out forwards;
+}
+
+@keyframes slideIn {
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Update loading button state */
+.btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+.btn:disabled:hover {
+    transform: none !important;
+    box-shadow: none !important;
+}

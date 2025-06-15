@@ -18,11 +18,9 @@ export class bookingBusinessesFetch extends OpenAPIRoute {
 				content: {
 					"application/json": {
 						schema: z.object({
-							series: z.object({
-								success: Bool(),
-								result: z.object({
-									task: bookingBusinesses,
-								}),
+							success: Bool(),
+							result: z.object({
+								task: bookingBusinesses,
 							}),
 						}),
 					},
@@ -33,10 +31,8 @@ export class bookingBusinessesFetch extends OpenAPIRoute {
 				content: {
 					"application/json": {
 						schema: z.object({
-							series: z.object({
-								success: Bool(),
-								error: Str(),
-							}),
+							success: Bool(),
+							error: Str(),
 						}),
 					},
 				},
@@ -72,11 +68,9 @@ export class bookingBusinessesFetch extends OpenAPIRoute {
 			console.error("Graph API error:", errorBody);
 			return Response.json(
 				{
-					series: {
-						success: false,
-						error: "Object not found",
-						details: errorBody,
-					},
+					success: false,
+					error: "Object not found",
+					details: errorBody,
 				},
 				{
 					status: 404,
@@ -92,10 +86,8 @@ export class bookingBusinessesFetch extends OpenAPIRoute {
 		if (!parsedBusiness.success) {
 			return Response.json(
 				{
-					series: {
-						success: false,
-						error: "Invalid business object structure",
-					},
+					success: false,
+					error: "Invalid business object structure",
 				},
 				{
 					status: 500,
@@ -104,11 +96,9 @@ export class bookingBusinessesFetch extends OpenAPIRoute {
 		}
 
 		return {
-			series: {
-				success: true,
-				result: {
-					task: parsedBusiness.data,
-				},
+			success: true,
+			result: {
+				task: parsedBusiness.data,
 			},
 		};
 	}

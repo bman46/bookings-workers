@@ -34,10 +34,8 @@ export class StaffAvailabilityFetch extends OpenAPIRoute {
                 content: {
                     "application/json": {
                         schema: z.object({
-                            series: z.object({
-                                success: Bool(),
-                                error: Str(),
-                            }),
+                            success: Bool(),
+                            error: Str(),
                         }),
                     },
                 },
@@ -75,11 +73,9 @@ export class StaffAvailabilityFetch extends OpenAPIRoute {
             console.error("Graph API error:", errorBody);
             return Response.json(
                 {
-                    series: {
-                        success: false,
-                        error: "Object not found",
-                        details: errorBody,
-                    },
+                    success: false,
+                    error: "Object not found",
+                    details: errorBody,
                 },
                 {
                     status: 404,
@@ -96,11 +92,9 @@ export class StaffAvailabilityFetch extends OpenAPIRoute {
             console.error("Expected schema vs actual data mismatch");
             return Response.json(
                 {
-                    series: {
-                        success: false,
-                        error: "Invalid response format from Microsoft Graph API",
-                        details: parseResult.error.issues,
-                    },
+                    success: false,
+                    error: "Invalid response format from Microsoft Graph API",
+                    details: parseResult.error.issues,
                 },
                 { status: 500 }
             );
@@ -110,10 +104,8 @@ export class StaffAvailabilityFetch extends OpenAPIRoute {
 
         return Response.json(
             {
-                series: {
-                    success: true,
-                    results: availabilityResponse,
-                },
+                success: true,
+                results: availabilityResponse,
             },
             {
                 status: 200,
