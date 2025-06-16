@@ -16,10 +16,7 @@ export class BookingTimePicker extends LitElement {
   `;
 
   getSlots(period: 'morning' | 'afternoon') {
-    console.log('getSlots called with:', { period, selectedDate: this.selectedDate, availability: this.availability, businessHours: this.businessHours });
-    
     if (!this.selectedDate) {
-      console.log('No selected date, returning empty array');
       return [];
     }
     
@@ -30,14 +27,11 @@ export class BookingTimePicker extends LitElement {
       this.businessHours
     );
     
-    console.log('All slots from getBookableSlots:', allSlots);
-    
     const filteredSlots = allSlots.filter(t => {
       const hour = parseInt(t.time.split(':')[0], 10);
       return period === 'morning' ? hour < 12 : hour >= 12;
     });
     
-    console.log(`Filtered slots for ${period}:`, filteredSlots);
     return filteredSlots;
   }
 

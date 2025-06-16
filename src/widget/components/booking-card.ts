@@ -4,6 +4,7 @@ import './booking-service-info';
 import './booking-date-picker';
 import './booking-time-picker';
 import { parseISODuration } from '../utils/isoDuration';
+import { getBookableSlots } from '../utils/slots';
 
 export class BookingCard extends LitElement {
   @property({ type: String, attribute: 'api-url' }) apiUrl = '';
@@ -18,6 +19,7 @@ export class BookingCard extends LitElement {
   @state() loading = true;
   @state() error = '';
   @state() selectedDate: string = '';
+  @state() currentWeekStart = new Date(); // Track current week
 
   static styles = css`
     .card {
@@ -50,8 +52,8 @@ export class BookingCard extends LitElement {
 
     const timeZone = this.business?.bookingPageSettings?.businessTimeZone || 'UTC';
     
-    // Use provided dates or default to next 7 days from today
-    const start = weekStart ? new Date(weekStart) : new Date();
+    // Use provided dates or default to current week
+    const start = weekStart ? new Date(weekStart) : new Date(this.currentWeekStart);
     const end = weekEnd ? new Date(weekEnd) : new Date(start.getTime() + 7 * 24 * 60 * 60 * 1000);
 
     const startDateTime = {
@@ -71,9 +73,127 @@ export class BookingCard extends LitElement {
       });
       const availJson = await availRes.json();
       this.availability = availJson.results || [];
+
+      // After fetching availability, find the nearest available date if none selected
+      if (!this.selectedDate) {
+        await this.selectNearestAvailableDate();
+      }
     } catch (e) {
       console.error('Failed to fetch availability:', e);
     }
+  }
+
+  async selectNearestAvailableDate() {
+    const maxAdvanceDays = this.business?.bookingPageSettings?.maximumAdvanceTime || 60; // Default 60 days
+    const today = new Date();
+    
+    // Check current week first
+    let availableDate = this.findAvailableDateInWeek(this.currentWeekStart);
+    
+    if (availableDate) {
+      this.selectedDate = availableDate;
+      return;
+    }
+
+    // If no available date in current week, check subsequent weeks
+    let weekStart = new Date(this.currentWeekStart);
+    let daysChecked = 0;
+
+    while (daysChecked < maxAdvanceDays) {
+      // Move to next week
+      weekStart.setDate(weekStart.getDate() + 7);
+      daysChecked += 7;
+
+      // Fetch availability for this week
+      const weekEnd = new Date(weekStart.getTime() + 6 * 24 * 60 * 60 * 1000);
+      await this.fetchAvailabilityForWeek(weekStart, weekEnd);
+
+      // Check if any date in this week is available
+      availableDate = this.findAvailableDateInWeek(weekStart);
+      
+      if (availableDate) {
+        // Update current week and select the date
+        this.currentWeekStart = new Date(weekStart);
+        this.selectedDate = availableDate;
+        return;
+      }
+    }
+
+    // If no available dates found within maximum advance time
+    this.error = 'No available appointments found within the booking window.';
+  }
+
+  async fetchAvailabilityForWeek(weekStart: Date, weekEnd: Date) {
+    if (!this.selectedService || !this.business) return;
+
+    const staffIds: string[] = Array.isArray(this.selectedService?.staffMemberIds)
+      ? this.selectedService.staffMemberIds
+      : [];
+
+    const timeZone = this.business?.bookingPageSettings?.businessTimeZone || 'UTC';
+    
+    const startDateTime = {
+      dateTime: weekStart.toISOString(),
+      timeZone
+    };
+    const endDateTime = {
+      dateTime: weekEnd.toISOString(),
+      timeZone
+    };
+
+    try {
+      const availRes = await fetch(`${this.apiUrl}/solutions/bookingBusinesses/${encodeURIComponent(this.bookingsId)}/staffAvailability`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ staffIds, startDateTime, endDateTime }),
+      });
+      const availJson = await availRes.json();
+      this.availability = availJson.results || [];
+    } catch (e) {
+      console.error('Failed to fetch availability for week:', e);
+    }
+  }
+
+  findAvailableDateInWeek(weekStart: Date): string | null {
+    if (!this.availability || !this.business?.businessHours) return null;
+
+    const slotDuration = parseISODuration(this.selectedService?.defaultDuration || 'PT15M').value;
+
+    // Check each day of the week
+    for (let i = 0; i < 7; i++) {
+      const date = new Date(weekStart);
+      date.setDate(weekStart.getDate() + i);
+      
+      // Skip past dates
+      if (date < new Date()) continue;
+      
+      const dateStr = date.toISOString().slice(0, 10);
+      
+      // Check if this day has business hours
+      const dayOfWeek = date.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
+      const hasBusinessHours = this.business.businessHours.some(
+        (d: any) => d.day.toLowerCase() === dayOfWeek && d.timeSlots?.length > 0
+      );
+
+      if (!hasBusinessHours) continue;
+
+      // Check if there are available slots for this day
+      const slots = this.getBookableSlotsForDate(dateStr, slotDuration);
+      if (slots.some((slot: any) => slot.available)) {
+        return dateStr;
+      }
+    }
+
+    return null;
+  }
+
+  getBookableSlotsForDate(date: string, slotDuration: number) {
+    return getBookableSlots(
+      this.availability,
+      slotDuration,
+      date,
+      this.business?.businessHours || []
+    );
   }
 
   async fetchAll() {
@@ -93,7 +213,12 @@ export class BookingCard extends LitElement {
         (s: any) => s.displayName?.toLowerCase() === this.serviceDisplayName?.toLowerCase()
       ) || this.services[0];
 
-      // 3. Fetch initial availability (current week)
+      // 3. Set current week to start from today
+      const today = new Date();
+      this.currentWeekStart = new Date(today);
+      this.currentWeekStart.setHours(0, 0, 0, 0);
+
+      // 4. Fetch initial availability and auto-select nearest available date
       await this.fetchAvailability();
 
     } catch (e) {
@@ -116,12 +241,16 @@ export class BookingCard extends LitElement {
         <hr />
         <booking-date-picker
           .businessHours=${this.business?.businessHours || []}
+          .availability=${this.availability}
+          .slotDuration=${parseISODuration(this.selectedService?.defaultDuration || 'PT15M').value}
           .timeZone=${this.business?.bookingPageSettings?.businessTimeZone || ''}
           .selectedDate=${this.selectedDate}
+          .currentWeekStart=${this.currentWeekStart}
           @date-selected=${(e: CustomEvent) => { 
             this.selectedDate = e.detail.date; 
           }}
           @week-changed=${(e: CustomEvent) => {
+            this.currentWeekStart = new Date(e.detail.weekStart);
             this.fetchAvailability(e.detail.weekStart, e.detail.weekEnd);
           }}>
         </booking-date-picker>

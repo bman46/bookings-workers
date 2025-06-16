@@ -1,11 +1,14 @@
 import { LitElement, html, css } from 'lit';
 import { property, state } from 'lit/decorators.js';
+import { getBookableSlots } from '../utils/slots';
 
 export class BookingDatePicker extends LitElement {
   @property({ type: Array }) businessHours: any[] = [];
+  @property({ type: Array }) availability: any[] = [];
   @property({ type: String }) timeZone = '';
+  @property({ type: Number }) slotDuration = 15;
+  @property({ type: Object }) currentWeekStart = new Date(); // Accept from parent
   @state() selectedDate = '';
-  @state() currentWeekStart = new Date(); // Track current week's start
 
   static styles = css`
     .week-header {
@@ -103,22 +106,6 @@ export class BookingDatePicker extends LitElement {
     }));
   }
 
-  connectedCallback() {
-    super.connectedCallback();
-    
-    // Use the ACTUAL current date
-    const today = new Date(); // This should be Monday, December 16, 2024
-    console.log('Today is:', today.toDateString(), today.toLocaleDateString('en-US', { weekday: 'long' }));
-    
-    this.currentWeekStart = new Date(today);
-    this.currentWeekStart.setHours(0, 0, 0, 0);
-    
-    // Auto-select today's date if none selected
-    if (!this.selectedDate) {
-      this.selectDate(today.toISOString().slice(0, 10));
-    }
-  }
-
   getWeekDays() {
     const days = [];
     
@@ -138,13 +125,25 @@ export class BookingDatePicker extends LitElement {
         d => d.day.toLowerCase() === dayOfWeek && d.timeSlots?.length > 0
       );
 
+      // Check if there are any available slots for this day
+      let hasAvailableSlots = false;
+      if (hasBusinessHours) {
+        const slotsForDay = getBookableSlots(
+          this.availability,
+          this.slotDuration,
+          dateStr,
+          this.businessHours
+        );
+        hasAvailableSlots = slotsForDay.some(slot => slot.available);
+      }
+
       days.push({
         date: dateStr,
         dayName,
         dayNumber: date.getDate(),
         isToday: dateStr === new Date().toISOString().slice(0, 10),
         isSelected: dateStr === this.selectedDate,
-        isDisabled: !hasBusinessHours
+        isDisabled: !hasBusinessHours || !hasAvailableSlots // Disable if no business hours OR no available slots
       });
     }
     
