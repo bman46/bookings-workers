@@ -1,13 +1,27 @@
+import { parseISODuration } from './isoDuration';
+
 interface TimeSlot {
   time: string;
   available: boolean;
+}
+
+function formatTime12Hour(time24: string): string {
+  const [hoursStr, minutesStr] = time24.split(':');
+  const hours = parseInt(hoursStr, 10);
+  const minutes = parseInt(minutesStr, 10);
+  
+  const period = hours >= 12 ? 'PM' : 'AM';
+  const hours12 = hours === 0 ? 12 : hours > 12 ? hours - 12 : hours;
+  
+  return `${hours12}:${minutes.toString().padStart(2, '0')} ${period}`;
 }
 
 export function getBookableSlots(
   availability: any[],
   slotDurationMinutes: number,
   date: string, // 'YYYY-MM-DD'
-  businessHours: any[]
+  businessHours: any[],
+  minimumLeadTime?: string // Add minimum lead time parameter
 ): TimeSlot[] {
   // Parse date explicitly to avoid timezone issues
   const [year, month, day] = date.split('-').map(Number);
@@ -22,6 +36,32 @@ export function getBookableSlots(
     return [];
   }
 
+  // Calculate minimum lead time in milliseconds
+  let minimumLeadTimeMs = 0;
+  if (minimumLeadTime) {
+    const leadTimeDuration = parseISODuration(minimumLeadTime);
+    
+    switch (leadTimeDuration.unit) {
+      case 'minutes':
+        minimumLeadTimeMs = leadTimeDuration.value * 60 * 1000;
+        break;
+      case 'hours':
+        minimumLeadTimeMs = leadTimeDuration.value * 60 * 60 * 1000;
+        break;
+      case 'days':
+        minimumLeadTimeMs = leadTimeDuration.value * 24 * 60 * 60 * 1000;
+        break;
+      case 'seconds':
+        minimumLeadTimeMs = leadTimeDuration.value * 1000;
+        break;
+      default:
+        minimumLeadTimeMs = 0;
+    }
+  }
+
+  const now = new Date();
+  const minimumBookingTime = new Date(now.getTime() + minimumLeadTimeMs);
+
   const slots: TimeSlot[] = [];
   for (const slot of hoursForDay.timeSlots) {
     // Use explicit date construction to avoid timezone issues
@@ -35,29 +75,36 @@ export function getBookableSlots(
     );
 
     while (slotTime < endTime) {
-      const timeStr = slotTime.toTimeString().slice(0, 5);
+      const timeStr24 = slotTime.toTimeString().slice(0, 5); // 24-hour format
+      const timeStr12 = formatTime12Hour(timeStr24); // Convert to 12-hour format
+      
+      // Check if slot is within minimum lead time
+      const isWithinLeadTime = slotTime < minimumBookingTime;
       
       let available = false;
-      for (const staff of availability) {
-        for (const item of staff.availabilityItems || []) {
-          if (
-            item.status === 'available' && 
-            item.startDateTime?.dateTime?.startsWith(date)
-          ) {
-            const availStart = new Date(item.startDateTime.dateTime);
-            const availEnd = new Date(item.endDateTime.dateTime);
-            const slotEnd = new Date(slotTime.getTime() + slotDurationMinutes * 60000);
-            
-            if (slotTime >= availStart && slotEnd <= availEnd) {
-              available = true;
-              break;
+      if (!isWithinLeadTime) { // Only check availability if not within lead time
+        for (const staff of availability) {
+          for (const item of staff.availabilityItems || []) {
+            if (
+              item.status === 'available' && 
+              item.startDateTime?.dateTime?.startsWith(date)
+            ) {
+              const availStart = new Date(item.startDateTime.dateTime);
+              const availEnd = new Date(item.endDateTime.dateTime);
+              const slotEnd = new Date(slotTime.getTime() + slotDurationMinutes * 60000);
+              
+              if (slotTime >= availStart && slotEnd <= availEnd) {
+                available = true;
+                break;
+              }
             }
           }
+          if (available) break;
         }
-        if (available) break;
       }
+      // If within lead time, available remains false (slot is unavailable)
 
-      slots.push({ time: timeStr, available });
+      slots.push({ time: timeStr12, available }); // Use 12-hour format
       slotTime = new Date(slotTime.getTime() + slotDurationMinutes * 60000);
     }
   }

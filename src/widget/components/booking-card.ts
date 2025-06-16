@@ -75,16 +75,29 @@ export class BookingCard extends LitElement {
       this.availability = availJson.results || [];
 
       // After fetching availability, find the nearest available date if none selected
-      if (!this.selectedDate) {
-        await this.selectNearestAvailableDate();
-      }
+      // Force re-selection even if a date was previously selected to ensure accuracy
+      await this.selectNearestAvailableDate();
     } catch (e) {
       console.error('Failed to fetch availability:', e);
     }
   }
 
+  getMaximumAdvanceDate(): Date {
+    // Get maximum advance from the selected service's scheduling policy
+    const maxAdvanceISO = this.selectedService?.schedulingPolicy?.maximumAdvance || 'P60D'; // Default 60 days
+    const maxAdvanceDays = parseISODuration(maxAdvanceISO).value; // Convert P10D to 10 (days)
+    
+    const today = new Date();
+    const maxDate = new Date(today);
+    maxDate.setDate(today.getDate() + maxAdvanceDays);
+    return maxDate;
+  }
+
   async selectNearestAvailableDate() {
-    const maxAdvanceDays = this.business?.bookingPageSettings?.maximumAdvanceTime || 60; // Default 60 days
+    // Get maximum advance from the selected service
+    const maxAdvanceISO = this.selectedService?.schedulingPolicy?.maximumAdvance || 'P60D';
+    const maxAdvanceDays = parseISODuration(maxAdvanceISO).value;
+    
     const today = new Date();
     
     // Check current week first
@@ -154,18 +167,43 @@ export class BookingCard extends LitElement {
     }
   }
 
+  isWeekWithinAdvanceLimit(weekStart: Date): boolean {
+    const maxAdvanceDate = this.getMaximumAdvanceDate();
+    // Check if the start of the week is within the advance limit
+    return weekStart <= maxAdvanceDate;
+  }
+
+  getBookableSlotsForDate(date: string, slotDuration: number) {
+    const minimumLeadTime = this.selectedService?.schedulingPolicy?.minimumLeadTime;
+    
+    return getBookableSlots(
+      this.availability,
+      slotDuration,
+      date,
+      this.business?.businessHours || [],
+      minimumLeadTime // Pass minimum lead time
+    );
+  }
+
   findAvailableDateInWeek(weekStart: Date): string | null {
     if (!this.availability || !this.business?.businessHours) return null;
 
     const slotDuration = parseISODuration(this.selectedService?.defaultDuration || 'PT15M').value;
+    const maxAdvanceDate = this.getMaximumAdvanceDate();
+    const minimumLeadTime = this.selectedService?.schedulingPolicy?.minimumLeadTime;
+    const today = new Date();
+    const now = new Date();
 
     // Check each day of the week
     for (let i = 0; i < 7; i++) {
       const date = new Date(weekStart);
       date.setDate(weekStart.getDate() + i);
       
-      // Skip past dates
-      if (date < new Date()) continue;
+      // Skip past dates (but allow today)
+      if (date < today && date.toDateString() !== today.toDateString()) continue;
+      
+      // Skip dates beyond maximum advance time
+      if (date > maxAdvanceDate) continue;
       
       const dateStr = date.toISOString().slice(0, 10);
       
@@ -178,22 +216,33 @@ export class BookingCard extends LitElement {
       if (!hasBusinessHours) continue;
 
       // Check if there are available slots for this day
-      const slots = this.getBookableSlotsForDate(dateStr, slotDuration);
-      if (slots.some((slot: any) => slot.available)) {
+      const slots = getBookableSlots(
+        this.availability,
+        slotDuration,
+        dateStr,
+        this.business?.businessHours || [],
+        minimumLeadTime // Pass minimum lead time here too
+      );
+      
+      // For today, filter out past time slots
+      let availableSlots = slots.filter((slot: any) => slot.available);
+      
+      if (date.toDateString() === today.toDateString()) {
+        // Filter out past time slots for today
+        availableSlots = availableSlots.filter((slot: any) => {
+          const [hours, minutes] = slot.time.split(':').map(Number);
+          const slotTime = new Date(date);
+          slotTime.setHours(hours, minutes, 0, 0);
+          return slotTime > now;
+        });
+      }
+      
+      if (availableSlots.length > 0) {
         return dateStr;
       }
     }
 
     return null;
-  }
-
-  getBookableSlotsForDate(date: string, slotDuration: number) {
-    return getBookableSlots(
-      this.availability,
-      slotDuration,
-      date,
-      this.business?.businessHours || []
-    );
   }
 
   async fetchAll() {
@@ -246,6 +295,8 @@ export class BookingCard extends LitElement {
           .timeZone=${this.business?.bookingPageSettings?.businessTimeZone || ''}
           .selectedDate=${this.selectedDate}
           .currentWeekStart=${this.currentWeekStart}
+          .maximumAdvanceDate=${this.getMaximumAdvanceDate()}
+          .minimumLeadTime=${this.selectedService?.schedulingPolicy?.minimumLeadTime || ''}
           @date-selected=${(e: CustomEvent) => { 
             this.selectedDate = e.detail.date; 
           }}
@@ -259,7 +310,9 @@ export class BookingCard extends LitElement {
           .businessHours=${this.business?.businessHours || []}
           .timeZone=${this.business?.bookingPageSettings?.businessTimeZone || ''}
           .slotDuration=${parseISODuration(this.selectedService?.defaultDuration || 'PT15M').value}
-          .selectedDate=${this.selectedDate}>
+          .selectedDate=${this.selectedDate}
+          .maximumAdvanceDate=${this.getMaximumAdvanceDate()}
+          .minimumLeadTime=${this.selectedService?.schedulingPolicy?.minimumLeadTime || ''}>
         </booking-time-picker>
       </div>
     `;

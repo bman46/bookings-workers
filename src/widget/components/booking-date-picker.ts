@@ -7,7 +7,9 @@ export class BookingDatePicker extends LitElement {
   @property({ type: Array }) availability: any[] = [];
   @property({ type: String }) timeZone = '';
   @property({ type: Number }) slotDuration = 15;
-  @property({ type: Object }) currentWeekStart = new Date(); // Accept from parent
+  @property({ type: Object }) currentWeekStart = new Date();
+  @property({ type: Object }) maximumAdvanceDate = new Date();
+  @property({ type: String }) minimumLeadTime = ''; // Add minimum lead time property
   @state() selectedDate = '';
 
   static styles = css`
@@ -93,6 +95,12 @@ export class BookingDatePicker extends LitElement {
   navigateWeek(direction: 'prev' | 'next') {
     const newWeekStart = new Date(this.currentWeekStart);
     newWeekStart.setDate(newWeekStart.getDate() + (direction === 'next' ? 7 : -7));
+    
+    // Don't allow navigation beyond maximum advance date
+    if (direction === 'next' && newWeekStart > this.maximumAdvanceDate) {
+      return; // Block navigation
+    }
+    
     this.currentWeekStart = newWeekStart;
     
     // Dispatch event to fetch new availability data
@@ -108,9 +116,9 @@ export class BookingDatePicker extends LitElement {
 
   getWeekDays() {
     const days = [];
-    
-    // Start from the current day (not start of week)
     const startDate = new Date(this.currentWeekStart);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
     
     for (let i = 0; i < 7; i++) {
       const date = new Date(startDate);
@@ -119,22 +127,43 @@ export class BookingDatePicker extends LitElement {
       const dateStr = date.toISOString().slice(0, 10);
       const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
       
+      // Check if date is beyond maximum advance time
+      const isBeyondAdvanceLimit = date > this.maximumAdvanceDate;
+      
+      // Check if date is in the past
+      const isPastDate = date < today;
+      
       // Check if this day has business hours
       const dayOfWeek = date.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
       const hasBusinessHours = this.businessHours.some(
         d => d.day.toLowerCase() === dayOfWeek && d.timeSlots?.length > 0
       );
 
-      // Check if there are any available slots for this day
+      // Check if there are any available slots for this day (only if within limits)
       let hasAvailableSlots = false;
-      if (hasBusinessHours) {
+      if (hasBusinessHours && !isPastDate && !isBeyondAdvanceLimit) {
         const slotsForDay = getBookableSlots(
           this.availability,
           this.slotDuration,
           dateStr,
-          this.businessHours
+          this.businessHours,
+          this.minimumLeadTime // Pass minimum lead time
         );
-        hasAvailableSlots = slotsForDay.some(slot => slot.available);
+        
+        let availableSlots = slotsForDay.filter(slot => slot.available);
+        
+        // For today, filter out past time slots
+        const now = new Date();
+        if (date.toDateString() === now.toDateString()) {
+          availableSlots = availableSlots.filter(slot => {
+            const [hours, minutes] = slot.time.split(':').map(Number);
+            const slotTime = new Date(date);
+            slotTime.setHours(hours, minutes, 0, 0);
+            return slotTime > now;
+          });
+        }
+        
+        hasAvailableSlots = availableSlots.length > 0;
       }
 
       days.push({
@@ -143,7 +172,7 @@ export class BookingDatePicker extends LitElement {
         dayNumber: date.getDate(),
         isToday: dateStr === new Date().toISOString().slice(0, 10),
         isSelected: dateStr === this.selectedDate,
-        isDisabled: !hasBusinessHours || !hasAvailableSlots // Disable if no business hours OR no available slots
+        isDisabled: !hasBusinessHours || !hasAvailableSlots || isPastDate || isBeyondAdvanceLimit
       });
     }
     
@@ -170,7 +199,12 @@ export class BookingDatePicker extends LitElement {
   render() {
     const weekDays = this.getWeekDays();
     const today = new Date();
-    const canGoPrev = this.currentWeekStart >= today; // Can go back if not showing past dates
+    const canGoPrev = this.currentWeekStart > today;
+    
+    // Check if next week would exceed maximum advance date
+    const nextWeekStart = new Date(this.currentWeekStart);
+    nextWeekStart.setDate(nextWeekStart.getDate() + 7);
+    const canGoNext = nextWeekStart <= this.maximumAdvanceDate;
 
     return html`
       <div class="week-header">
@@ -184,6 +218,7 @@ export class BookingDatePicker extends LitElement {
           </button>
           <button 
             class="nav-btn" 
+            ?disabled=${!canGoNext}
             @click=${() => this.navigateWeek('next')}>
             Next →
           </button>
