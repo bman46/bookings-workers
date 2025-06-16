@@ -36,6 +36,72 @@ export class BookingCard extends LitElement {
       border-top: 1px solid #eee;
       margin: 24px 0;
     }
+    
+    /* Loading screen styles */
+    .loading {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 48px 24px;
+      text-align: center;
+      min-height: 200px;
+    }
+    
+    .loading-spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid #f0f0f0;
+      border-top: 3px solid #1769ff;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-bottom: 16px;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    .loading-text {
+      color: #666;
+      font-size: 1rem;
+      font-weight: 500;
+      margin-bottom: 8px;
+    }
+    
+    .loading-subtext {
+      color: #888;
+      font-size: 0.9rem;
+      line-height: 1.4;
+    }
+    
+    /* Skeleton loading for content areas */
+    .skeleton {
+      background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+      border-radius: 8px;
+    }
+    
+    @keyframes shimmer {
+      0% { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
+    
+    .skeleton-service {
+      height: 80px;
+      margin-bottom: 24px;
+    }
+    
+    .skeleton-calendar {
+      height: 120px;
+      margin-bottom: 16px;
+    }
+    
+    .skeleton-times {
+      height: 100px;
+    }
   `;
 
   connectedCallback() {
@@ -265,7 +331,18 @@ export class BookingCard extends LitElement {
   }
 
   render() {
-    if (this.loading) return html`<div class="card">Loading...</div>`;
+    if (this.loading) {
+      return html`
+        <div class="card">
+          <div class="loading">
+            <div class="loading-spinner"></div>
+            <div class="loading-text">Loading booking options</div>
+            <div class="loading-subtext">Please wait while we fetch available appointments...</div>
+          </div>
+        </div>
+      `;
+    }
+    
     if (this.error) return html`<div class="card">${this.error}</div>`;
 
     return html`
