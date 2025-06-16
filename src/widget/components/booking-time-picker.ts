@@ -52,6 +52,8 @@ export class BookingTimePicker extends LitElement {
 
   handleTimeSelected(event: CustomEvent) {
     const time = event.detail?.time;
+    const staffIds = event.detail?.staffIds; // Get staff IDs from the time slot
+    
     if (!time) {
       console.error('No time in event detail:', event.detail);
       return;
@@ -73,7 +75,8 @@ export class BookingTimePicker extends LitElement {
     console.log('Date and time selected:', {
       date: this.selectedDate,
       time: time,
-      timestamp: timestamp
+      timestamp: timestamp,
+      staffIds: staffIds
     });
     
     // Dispatch event to parent component
@@ -81,7 +84,8 @@ export class BookingTimePicker extends LitElement {
       detail: { 
         time,
         date: this.selectedDate,
-        timestamp: timestamp
+        timestamp: timestamp,
+        staffIds: staffIds || []
       },
       bubbles: true,
       composed: true

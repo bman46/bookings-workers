@@ -4,6 +4,7 @@ import { property } from 'lit/decorators.js';
 interface TimeSlot {
   time: string;
   available: boolean;
+  staffIds?: string[]; // Add staff IDs to the interface
 }
 
 export class BookingTimeSlot extends LitElement {
@@ -46,8 +47,15 @@ export class BookingTimeSlot extends LitElement {
 
   handleTimeClick(time: string) {
     console.log('Time slot clicked:', time);
+    
+    // Find the slot to get staff information
+    const slot = this.times.find(s => s.time === time);
+    
     this.dispatchEvent(new CustomEvent('time-selected', {
-      detail: { time },
+      detail: { 
+        time,
+        staffIds: slot?.staffIds || []
+      },
       bubbles: true,
       composed: true
     }));

@@ -23,6 +23,7 @@ export class BookingCard extends LitElement {
   @state() currentWeekStart = new Date(); // Track current week
   @state() showBookingForm = false; // Add this state property
   @state() selectedTimestamp = ''; // Change from selectedTime to selectedTimestamp
+  @state() selectedStaffIds: string[] = []; // Add staff IDs property
 
   static styles = css`
     .card {
@@ -333,9 +334,10 @@ export class BookingCard extends LitElement {
     this.loading = false;
   }
 
-  // Update event handler to use timestamp
+  // Update event handler to use timestamp and staff
   handleTimeSelected(e: CustomEvent) {
     this.selectedTimestamp = e.detail.timestamp;
+    this.selectedStaffIds = e.detail.staffIds || []; // Store selected staff
     this.showBookingForm = true;
   }
 
@@ -343,6 +345,24 @@ export class BookingCard extends LitElement {
   handleChangeAppointment() {
     this.showBookingForm = false;
     this.selectedTimestamp = '';
+  }
+
+  // Add the missing booking confirmed handler
+  handleBookingConfirmed(e: CustomEvent) {
+    // Handle successful booking - could dispatch event, show confirmation, etc.
+    console.log('Booking confirmed:', e.detail);
+    
+    // Reset the form state
+    this.showBookingForm = false;
+    this.selectedTimestamp = '';
+    this.selectedStaffIds = [];
+    
+    // You could dispatch a custom event to notify parent components
+    this.dispatchEvent(new CustomEvent('booking-completed', {
+      detail: e.detail,
+      bubbles: true,
+      composed: true
+    }));
   }
 
   render() {
@@ -359,12 +379,12 @@ export class BookingCard extends LitElement {
           <booking-form
             .selectedService=${this.selectedService}
             .selectedTimestamp=${this.selectedTimestamp}
+            .selectedStaffIds=${this.selectedStaffIds || []}
             .businessName=${this.business?.displayName || ''}
-            @change-appointment=${this.handleChangeAppointment}
-            @booking-confirmed=${(e: CustomEvent) => {
-              // Handle booking confirmation
-              console.log('Booking confirmed:', e.detail);
-            }}>
+            .apiUrl=${this.apiUrl}
+            .bookingsId=${this.bookingsId}
+            @booking-confirmed=${this.handleBookingConfirmed}
+            @change-appointment=${this.handleChangeAppointment}>
           </booking-form>
         </div>
       `;

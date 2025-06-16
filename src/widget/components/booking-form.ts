@@ -1,10 +1,14 @@
 import { LitElement, html, css } from 'lit';
 import { property, state } from 'lit/decorators.js';
+import { parseISODuration } from '../utils/isoDuration';
 
 export class BookingForm extends LitElement {
   @property({ type: Object }) selectedService: any = null;
   @property({ type: String }) selectedTimestamp = '';
   @property({ type: String }) businessName = '';
+  @property({ type: Array }) selectedStaffIds: string[] = []; // Add staff IDs property
+  @property({ type: String }) apiUrl = ''; // Add API URL property
+  @property({ type: String }) bookingsId = ''; // Add bookings ID property
 
   @state() customerName = '';
   @state() customerPhone = '';
@@ -284,14 +288,95 @@ export class BookingForm extends LitElement {
     this.isSubmitting = true;
 
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Calculate end time based on service duration
+      const startDateTime = new Date(this.selectedTimestamp);
+      const serviceDuration = this.selectedService?.defaultDuration || 'PT15M'; // Default 15 minutes
+      
+      // Parse ISO duration using the utility
+      const duration = parseISODuration(serviceDuration);
+      let durationMs = 0;
+      
+      switch (duration.unit) {
+        case 'minutes':
+          durationMs = duration.value * 60 * 1000;
+          break;
+        case 'hours':
+          durationMs = duration.value * 60 * 60 * 1000;
+          break;
+        case 'days':
+          durationMs = duration.value * 24 * 60 * 60 * 1000;
+          break;
+        case 'seconds':
+          durationMs = duration.value * 1000;
+          break;
+        default:
+          console.warn("Failing over to default");
+          durationMs = 15 * 60 * 1000; // Default 15 minutes
+      }
+      
+      const endDateTime = new Date(startDateTime.getTime() + durationMs);
+      
+      // Format dates for Microsoft Graph API
+      const formatDateTime = (date: Date) => {
+        return date.toISOString().slice(0, 19); // Remove timezone suffix
+      };
+      
+      // Use UTC as time zone to match timestamps
+      const timeZone = "UTC";
+      
+      // Build the appointment object matching the backend schema
+      const appointmentData = {
+        serviceId: this.selectedService?.id,
+        staffMemberIds: this.selectedStaffIds.slice(0, 1), // Only use first staff ID
+        startDateTime: {
+          dateTime: formatDateTime(startDateTime),
+          timeZone: timeZone
+        },
+        endDateTime: {
+          dateTime: formatDateTime(endDateTime),
+          timeZone: timeZone
+        },
+        isCustomerAllowedToManageBooking: true,
+        optOutOfCustomerEmail: false,
+        smsNotificationsEnabled: true,
+        customers: [
+          {
+            name: this.customerName,
+            emailAddress: this.customerEmail,
+            phone: this.customerPhone.replace(/\D/g, ''), // Remove formatting
+            customQuestionAnswers: [], // Empty for now - can be extended later
+            notes: this.notes || ""
+          }
+        ]
+      };
 
-      // Dispatch booking confirmed event
+      console.log('Appointment data:', appointmentData);
+
+      // Make actual API call to your worker endpoint
+      const response = await fetch(`${this.apiUrl}/solutions/bookingBusinesses/${encodeURIComponent(this.bookingsId)}/appointments`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(appointmentData)
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      console.log('Appointment created successfully:', result);
+
+      // Dispatch booking confirmed event with both original and formatted data
       this.dispatchEvent(new CustomEvent('booking-confirmed', {
         detail: {
+          appointmentData, // The formatted object for API
+          result, // The response from the API
           service: this.selectedService,
           timestamp: this.selectedTimestamp,
+          staffIds: this.selectedStaffIds,
           customer: {
             name: this.customerName,
             phone: this.customerPhone,
@@ -301,11 +386,21 @@ export class BookingForm extends LitElement {
         },
         bubbles: true,
         composed: true
-    }));
+      }));
 
     } catch (error) {
       console.error('Booking failed:', error);
-      // Handle error - could show error message
+      
+      // Handle the unknown error type properly
+      let errorMessage = 'An unexpected error occurred';
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      } else if (typeof error === 'string') {
+        errorMessage = error;
+      }
+      
+      // Show user-friendly error message
+      alert(`Booking failed: ${errorMessage}`);
     } finally {
       this.isSubmitting = false;
     }

@@ -3,6 +3,7 @@ import { parseISODuration } from './isoDuration';
 interface TimeSlot {
   time: string;
   available: boolean;
+  staffIds: string[];
 }
 
 function formatTime12Hour(time24: string): string {
@@ -81,30 +82,38 @@ export function getBookableSlots(
       // Check if slot is within minimum lead time
       const isWithinLeadTime = slotTime < minimumBookingTime;
       
-      let available = false;
-      if (!isWithinLeadTime) { // Only check availability if not within lead time
-        for (const staff of availability) {
-          for (const item of staff.availabilityItems || []) {
-            if (
-              item.status === 'available' && 
-              item.startDateTime?.dateTime?.startsWith(date)
-            ) {
-              const availStart = new Date(item.startDateTime.dateTime);
-              const availEnd = new Date(item.endDateTime.dateTime);
-              const slotEnd = new Date(slotTime.getTime() + slotDurationMinutes * 60000);
-              
-              if (slotTime >= availStart && slotEnd <= availEnd) {
-                available = true;
-                break;
+      let availableStaffIds: string[] = []; // Track which staff are available
+      
+      // Always check for available staff, regardless of lead time
+      for (const staff of availability) {
+        for (const item of staff.availabilityItems || []) {
+          if (
+            item.status === 'available' && 
+            item.startDateTime?.dateTime?.startsWith(date)
+          ) {
+            const availStart = new Date(item.startDateTime.dateTime);
+            const availEnd = new Date(item.endDateTime.dateTime);
+            const slotEnd = new Date(slotTime.getTime() + slotDurationMinutes * 60000);
+            
+            if (slotTime >= availStart && slotEnd <= availEnd) {
+              // Add staff ID to available list - use staffId from API
+              if (staff.staffId && !availableStaffIds.includes(staff.staffId)) {
+                availableStaffIds.push(staff.staffId);
               }
             }
           }
-          if (available) break;
         }
       }
-      // If within lead time, available remains false (slot is unavailable)
 
-      slots.push({ time: timeStr12, available }); // Use 12-hour format
+      // A slot is available if it has staff AND is not within lead time
+      const available = availableStaffIds.length > 0 && !isWithinLeadTime;
+
+      slots.push({ 
+        time: timeStr12, 
+        available,
+        staffIds: availableStaffIds
+      });
+      
       slotTime = new Date(slotTime.getTime() + slotDurationMinutes * 60000);
     }
   }
