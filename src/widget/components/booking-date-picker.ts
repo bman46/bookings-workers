@@ -98,20 +98,26 @@ export class BookingDatePicker extends LitElement {
     
     // Don't allow navigation beyond maximum advance date
     if (direction === 'next' && newWeekStart > this.maximumAdvanceDate) {
-      return; // Block navigation
+      return;
+    }
+    
+    // Don't allow navigation to past weeks
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    if (direction === 'prev' && newWeekStart < today) {
+      return;
     }
     
     this.currentWeekStart = newWeekStart;
     
-    // Dispatch event to fetch new availability data
+    // Dispatch event to notify parent to fetch new availability data
     this.dispatchEvent(new CustomEvent('week-changed', {
-      detail: { 
-        weekStart: newWeekStart.toISOString().slice(0, 10),
-        weekEnd: new Date(newWeekStart.getTime() + 6 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
-      },
+      detail: { weekStart: newWeekStart },
       bubbles: true,
       composed: true
     }));
+    
+    this.requestUpdate();
   }
 
   getWeekDays() {

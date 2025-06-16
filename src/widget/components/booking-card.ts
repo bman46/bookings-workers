@@ -105,7 +105,6 @@ export class BookingCard extends LitElement {
     
     if (availableDate) {
       this.selectedDate = availableDate;
-      console.log("Found date: ", availableDate);
       return;
     }
 
