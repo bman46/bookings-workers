@@ -1,7 +1,7 @@
 import { LitElement, html, css } from 'lit';
 import { property, state } from 'lit/decorators.js';
 import './booking-time-slot';
-import { getBookableSlots } from '../utils/slots.js';
+import { getBookableSlots } from '../utils/slots';
 
 export class BookingTimePicker extends LitElement {
   @property({ type: Array }) availability: any[] = [];
@@ -16,12 +16,29 @@ export class BookingTimePicker extends LitElement {
   `;
 
   getSlots(period: 'morning' | 'afternoon') {
-    if (!this.selectedDate) return [];
-    const allSlots = getBookableSlots(this.availability, this.slotDuration, this.selectedDate);
-    return allSlots.filter(t => {
-      const hour = parseInt(t.split(':')[0], 10);
+    console.log('getSlots called with:', { period, selectedDate: this.selectedDate, availability: this.availability, businessHours: this.businessHours });
+    
+    if (!this.selectedDate) {
+      console.log('No selected date, returning empty array');
+      return [];
+    }
+    
+    const allSlots = getBookableSlots(
+      this.availability,
+      this.slotDuration,
+      this.selectedDate,
+      this.businessHours
+    );
+    
+    console.log('All slots from getBookableSlots:', allSlots);
+    
+    const filteredSlots = allSlots.filter(t => {
+      const hour = parseInt(t.time.split(':')[0], 10);
       return period === 'morning' ? hour < 12 : hour >= 12;
     });
+    
+    console.log(`Filtered slots for ${period}:`, filteredSlots);
+    return filteredSlots;
   }
 
   render() {

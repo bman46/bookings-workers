@@ -41,42 +41,29 @@ export class BookingCard extends LitElement {
     this.fetchAll();
   }
 
-  async fetchAll() {
-    this.loading = true;
-    this.error = '';
+  async fetchAvailability(weekStart?: string, weekEnd?: string) {
+    if (!this.selectedService || !this.business) return;
+
+    const staffIds: string[] = Array.isArray(this.selectedService?.staffMemberIds)
+      ? this.selectedService.staffMemberIds
+      : [];
+
+    const timeZone = this.business?.bookingPageSettings?.businessTimeZone || 'UTC';
+    
+    // Use provided dates or default to next 7 days from today
+    const start = weekStart ? new Date(weekStart) : new Date();
+    const end = weekEnd ? new Date(weekEnd) : new Date(start.getTime() + 7 * 24 * 60 * 60 * 1000);
+
+    const startDateTime = {
+      dateTime: start.toISOString(),
+      timeZone
+    };
+    const endDateTime = {
+      dateTime: end.toISOString(),
+      timeZone
+    };
+
     try {
-      // 1. Fetch business info
-      const businessRes = await fetch(`${this.apiUrl}/api/tasks/${encodeURIComponent(this.bookingsId)}`);
-      const businessJson = await businessRes.json();
-      this.business = businessJson.result?.task;
-
-      // 2. Fetch services (updated for new API structure)
-      const servicesRes = await fetch(`${this.apiUrl}/api/tasks/${encodeURIComponent(this.bookingsId)}/services`);
-      const servicesJson = await servicesRes.json();
-      this.services = servicesJson.services?.results || [];
-
-      // Select the service by displayName (case-insensitive)
-      this.selectedService = this.services.find(
-        (s: any) => s.displayName?.toLowerCase() === this.serviceDisplayName?.toLowerCase()
-      ) || this.services[0];
-
-      // Extract staff IDs from the selected service only
-      const staffIds: string[] = Array.isArray(this.selectedService?.staffMemberIds)
-        ? this.selectedService.staffMemberIds
-        : [];
-
-      // 3. Fetch availability for selected service's staff (example: fetch for today)
-      const timeZone = this.business?.bookingPageSettings?.businessTimeZone || 'UTC';
-      const today = new Date();
-      const startDateTime = {
-        dateTime: today.toISOString(),
-        timeZone
-      };
-      const endDateTime = {
-        dateTime: new Date(today.getTime() + 24 * 60 * 60 * 1000).toISOString(),
-        timeZone
-      };
-
       const availRes = await fetch(`${this.apiUrl}/solutions/bookingBusinesses/${encodeURIComponent(this.bookingsId)}/staffAvailability`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -84,6 +71,31 @@ export class BookingCard extends LitElement {
       });
       const availJson = await availRes.json();
       this.availability = availJson.results || [];
+    } catch (e) {
+      console.error('Failed to fetch availability:', e);
+    }
+  }
+
+  async fetchAll() {
+    try {
+      // 1. Fetch business info
+      const businessRes = await fetch(`${this.apiUrl}/api/tasks/${encodeURIComponent(this.bookingsId)}`);
+      const businessJson = await businessRes.json();
+      this.business = businessJson.result?.task;
+
+      // 2. Fetch services
+      const servicesRes = await fetch(`${this.apiUrl}/api/tasks/${encodeURIComponent(this.bookingsId)}/services`);
+      const servicesJson = await servicesRes.json();
+      this.services = servicesJson.services?.results || [];
+
+      // Select the service by displayName
+      this.selectedService = this.services.find(
+        (s: any) => s.displayName?.toLowerCase() === this.serviceDisplayName?.toLowerCase()
+      ) || this.services[0];
+
+      // 3. Fetch initial availability (current week)
+      await this.fetchAvailability();
+
     } catch (e) {
       this.error = 'Failed to load booking data.';
     }
@@ -93,6 +105,7 @@ export class BookingCard extends LitElement {
   render() {
     if (this.loading) return html`<div class="card">Loading...</div>`;
     if (this.error) return html`<div class="card">${this.error}</div>`;
+
     return html`
       <div class="card">
         <booking-service-info
@@ -105,13 +118,18 @@ export class BookingCard extends LitElement {
           .businessHours=${this.business?.businessHours || []}
           .timeZone=${this.business?.bookingPageSettings?.businessTimeZone || ''}
           .selectedDate=${this.selectedDate}
-          @date-selected=${(e: CustomEvent) => { this.selectedDate = e.detail.date; }}>
+          @date-selected=${(e: CustomEvent) => { 
+            this.selectedDate = e.detail.date; 
+          }}
+          @week-changed=${(e: CustomEvent) => {
+            this.fetchAvailability(e.detail.weekStart, e.detail.weekEnd);
+          }}>
         </booking-date-picker>
         <booking-time-picker
           .availability=${this.availability}
           .businessHours=${this.business?.businessHours || []}
           .timeZone=${this.business?.bookingPageSettings?.businessTimeZone || ''}
-          .slotDuration=${parseISODuration(this.selectedService?.defaultDuration || 'PT15M')}
+          .slotDuration=${parseISODuration(this.selectedService?.defaultDuration || 'PT15M').value}
           .selectedDate=${this.selectedDate}>
         </booking-time-picker>
       </div>
