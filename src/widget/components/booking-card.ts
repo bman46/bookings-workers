@@ -3,6 +3,7 @@ import { property, state } from 'lit/decorators.js';
 import './booking-service-info';
 import './booking-date-picker';
 import './booking-time-picker';
+import { parseISODuration } from '../utils/isoDuration';
 
 export class BookingCard extends LitElement {
   @property({ type: String, attribute: 'api-url' }) apiUrl = '';
@@ -16,6 +17,7 @@ export class BookingCard extends LitElement {
   @state() availability: any = null;
   @state() loading = true;
   @state() error = '';
+  @state() selectedDate: string = '';
 
   static styles = css`
     .card {
@@ -102,12 +104,16 @@ export class BookingCard extends LitElement {
         <booking-date-picker
           .businessHours=${this.business?.businessHours || []}
           .timeZone=${this.business?.bookingPageSettings?.businessTimeZone || ''}
-        ></booking-date-picker>
+          .selectedDate=${this.selectedDate}
+          @date-selected=${(e: CustomEvent) => { this.selectedDate = e.detail.date; }}>
+        </booking-date-picker>
         <booking-time-picker
           .availability=${this.availability}
           .businessHours=${this.business?.businessHours || []}
           .timeZone=${this.business?.bookingPageSettings?.businessTimeZone || ''}
-        ></booking-time-picker>
+          .slotDuration=${parseISODuration(this.selectedService?.defaultDuration || 'PT15M')}
+          .selectedDate=${this.selectedDate}>
+        </booking-time-picker>
       </div>
     `;
   }

@@ -1,6 +1,6 @@
 import { LitElement, html, css } from 'lit';
 import { property } from 'lit/decorators.js';
-import { parseISODuration } from '../utils/isoDuration.js';
+import { parseISODuration } from '../utils/isoDuration';
 
 export class BookingServiceInfo extends LitElement {
   @property({ type: Object }) business: any = null;
