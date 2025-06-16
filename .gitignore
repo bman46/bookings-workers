@@ -175,3 +175,6 @@ dist
 
 # TS incremental build
 tsconfig.*.tsbuildinfo
+
+# Rollup cache
+.rollup.cache

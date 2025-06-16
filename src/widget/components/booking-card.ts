@@ -64,9 +64,16 @@ export class BookingCard extends LitElement {
         : [];
 
       // 3. Fetch availability for selected service's staff (example: fetch for today)
+      const timeZone = this.business?.bookingPageSettings?.businessTimeZone || 'UTC';
       const today = new Date();
-      const startDateTime = today.toISOString();
-      const endDateTime = new Date(today.getTime() + 24 * 60 * 60 * 1000).toISOString();
+      const startDateTime = {
+        dateTime: today.toISOString(),
+        timeZone
+      };
+      const endDateTime = {
+        dateTime: new Date(today.getTime() + 24 * 60 * 60 * 1000).toISOString(),
+        timeZone
+      };
 
       const availRes = await fetch(`${this.apiUrl}/solutions/bookingBusinesses/${encodeURIComponent(this.bookingsId)}/staffAvailability`, {
         method: 'POST',
