@@ -3,6 +3,7 @@ import { property, state } from 'lit/decorators.js';
 import './booking-service-info';
 import './booking-date-picker';
 import './booking-time-picker';
+import './booking-form'; // Import the booking form component
 import { parseISODuration } from '../utils/isoDuration';
 import { getBookableSlots } from '../utils/slots';
 
@@ -20,6 +21,8 @@ export class BookingCard extends LitElement {
   @state() error = '';
   @state() selectedDate: string = '';
   @state() currentWeekStart = new Date(); // Track current week
+  @state() showBookingForm = false; // Add this state property
+  @state() selectedTimestamp = ''; // Change from selectedTime to selectedTimestamp
 
   static styles = css`
     .card {
@@ -330,7 +333,43 @@ export class BookingCard extends LitElement {
     this.loading = false;
   }
 
+  // Update event handler to use timestamp
+  handleTimeSelected(e: CustomEvent) {
+    this.selectedTimestamp = e.detail.timestamp;
+    this.showBookingForm = true;
+  }
+
+  // Update method to clear timestamp
+  handleChangeAppointment() {
+    this.showBookingForm = false;
+    this.selectedTimestamp = '';
+  }
+
   render() {
+    if (this.showBookingForm && this.selectedTimestamp) {
+      // Show booking form with service info at top
+      return html`
+        <div class="card">
+          <booking-service-info
+            .business=${this.business}
+            .services=${[this.selectedService]}
+            .icon=${this.icon}>
+          </booking-service-info>
+          <hr />
+          <booking-form
+            .selectedService=${this.selectedService}
+            .selectedTimestamp=${this.selectedTimestamp}
+            .businessName=${this.business?.displayName || ''}
+            @change-appointment=${this.handleChangeAppointment}
+            @booking-confirmed=${(e: CustomEvent) => {
+              // Handle booking confirmation
+              console.log('Booking confirmed:', e.detail);
+            }}>
+          </booking-form>
+        </div>
+      `;
+    }
+
     if (this.loading) {
       return html`
         <div class="card">
@@ -353,32 +392,35 @@ export class BookingCard extends LitElement {
           .icon=${this.icon}>
         </booking-service-info>
         <hr />
-        <booking-date-picker
-          .businessHours=${this.business?.businessHours || []}
-          .availability=${this.availability}
-          .slotDuration=${parseISODuration(this.selectedService?.defaultDuration || 'PT15M').value}
-          .timeZone=${this.business?.bookingPageSettings?.businessTimeZone || ''}
-          .selectedDate=${this.selectedDate}
-          .currentWeekStart=${this.currentWeekStart}
-          .maximumAdvanceDate=${this.getMaximumAdvanceDate()}
-          .minimumLeadTime=${this.selectedService?.schedulingPolicy?.minimumLeadTime || ''}
-          @date-selected=${(e: CustomEvent) => { 
-            this.selectedDate = e.detail.date; 
-          }}
-          @week-changed=${(e: CustomEvent) => {
-            this.currentWeekStart = new Date(e.detail.weekStart);
-            this.fetchAvailability(e.detail.weekStart, e.detail.weekEnd);
-          }}>
-        </booking-date-picker>
-        <booking-time-picker
-          .availability=${this.availability}
-          .businessHours=${this.business?.businessHours || []}
-          .timeZone=${this.business?.bookingPageSettings?.businessTimeZone || ''}
-          .slotDuration=${parseISODuration(this.selectedService?.defaultDuration || 'PT15M').value}
-          .selectedDate=${this.selectedDate}
-          .maximumAdvanceDate=${this.getMaximumAdvanceDate()}
-          .minimumLeadTime=${this.selectedService?.schedulingPolicy?.minimumLeadTime || ''}>
-        </booking-time-picker>
+        <div class="booking-container">
+          <booking-date-picker
+            .businessHours=${this.business?.businessHours || []}
+            .availability=${this.availability}
+            .timeZone=${this.business?.bookingPageSettings?.businessTimeZone || ''}
+            .slotDuration=${parseISODuration(this.selectedService?.defaultDuration || 'PT15M').value}
+            .selectedDate=${this.selectedDate}
+            .currentWeekStart=${this.currentWeekStart}
+            .maximumAdvanceDate=${this.getMaximumAdvanceDate()}
+            .minimumLeadTime=${this.selectedService?.schedulingPolicy?.minimumLeadTime || ''}
+            @date-selected=${(e: CustomEvent) => { 
+              this.selectedDate = e.detail.date; 
+            }}
+            @week-changed=${(e: CustomEvent) => {
+              this.currentWeekStart = new Date(e.detail.weekStart);
+              this.fetchAvailability(e.detail.weekStart, e.detail.weekEnd);
+            }}>
+          </booking-date-picker>
+          <booking-time-picker
+            .availability=${this.availability}
+            .businessHours=${this.business?.businessHours || []}
+            .timeZone=${this.business?.bookingPageSettings?.businessTimeZone || ''}
+            .slotDuration=${parseISODuration(this.selectedService?.defaultDuration || 'PT15M').value}
+            .selectedDate=${this.selectedDate}
+            .maximumAdvanceDate=${this.getMaximumAdvanceDate()}
+            .minimumLeadTime=${this.selectedService?.schedulingPolicy?.minimumLeadTime || ''}
+            @time-selected=${this.handleTimeSelected}>
+          </booking-time-picker>
+        </div>
       </div>
     `;
   }

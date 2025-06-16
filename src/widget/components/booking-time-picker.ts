@@ -18,32 +18,6 @@ export class BookingTimePicker extends LitElement {
     .label { font-size: 0.98rem; color: #666; margin-bottom: 6px; font-weight: 500; }
   `;
 
-  handleTimeSelected(event: CustomEvent) {
-    const time = event.detail.time;
-    this.selectedTime = time;
-    
-    // Create a proper timestamp from the selected date and time
-    const selectedDateTime = this.createSelectedDateTime(this.selectedDate, time);
-    
-    // Log the selected date and time
-    console.log('Date and time selected:', {
-      date: this.selectedDate,
-      time: time,
-      timestamp: selectedDateTime.toISOString()
-    });
-    
-    // Dispatch event to parent component
-    this.dispatchEvent(new CustomEvent('time-selected', {
-      detail: { 
-        time,
-        date: this.selectedDate,
-        timestamp: selectedDateTime.toISOString()
-      },
-      bubbles: true,
-      composed: true
-    }));
-  }
-
   private createSelectedDateTime(dateStr: string, timeStr: string): Date {
     // Parse the date (YYYY-MM-DD format)
     const [year, month, day] = dateStr.split('-').map(Number);
@@ -64,7 +38,54 @@ export class BookingTimePicker extends LitElement {
     }
     
     // Create the date object (month is 0-indexed in JavaScript Date)
-    return new Date(year, month - 1, day, hours, minutes, 0, 0);
+    const date = new Date(year, month - 1, day, hours, minutes, 0, 0);
+    
+    // Validate the date
+    if (isNaN(date.getTime())) {
+      console.error('Invalid date created:', date);
+      // Fallback to current date
+      return new Date();
+    }
+    
+    return date;
+  }
+
+  handleTimeSelected(event: CustomEvent) {
+    const time = event.detail?.time;
+    if (!time) {
+      console.error('No time in event detail:', event.detail);
+      return;
+    }
+    
+    this.selectedTime = time;
+    
+    // Check if selectedDate is available
+    if (!this.selectedDate) {
+      console.error('No selectedDate available for time selection');
+      return;
+    }
+    
+    // Create a proper timestamp from the selected date and time
+    const selectedDateTime = this.createSelectedDateTime(this.selectedDate, time);
+    const timestamp = selectedDateTime.toISOString();
+    
+    // Log the selected date and time
+    console.log('Date and time selected:', {
+      date: this.selectedDate,
+      time: time,
+      timestamp: timestamp
+    });
+    
+    // Dispatch event to parent component
+    this.dispatchEvent(new CustomEvent('time-selected', {
+      detail: { 
+        time,
+        date: this.selectedDate,
+        timestamp: timestamp
+      },
+      bubbles: true,
+      composed: true
+    }));
   }
 
   getSlots(period: 'morning' | 'afternoon') {
@@ -115,7 +136,10 @@ export class BookingTimePicker extends LitElement {
         <booking-time-slot 
           .times=${this.getSlots('morning')}
           .selectedTime=${this.selectedTime}
-          @time-selected=${this.handleTimeSelected}>
+          @time-selected=${(e: CustomEvent) => {
+            e.stopPropagation(); // Prevent event from bubbling further
+            this.handleTimeSelected(e);
+          }}>
         </booking-time-slot>
       </div>
       <div class="section">
@@ -123,7 +147,10 @@ export class BookingTimePicker extends LitElement {
         <booking-time-slot 
           .times=${this.getSlots('afternoon')}
           .selectedTime=${this.selectedTime}
-          @time-selected=${this.handleTimeSelected}>
+          @time-selected=${(e: CustomEvent) => {
+            e.stopPropagation(); // Prevent event from bubbling further
+            this.handleTimeSelected(e);
+          }}>
         </booking-time-slot>
       </div>
     `;
