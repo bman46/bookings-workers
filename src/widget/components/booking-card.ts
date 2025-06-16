@@ -105,6 +105,7 @@ export class BookingCard extends LitElement {
     
     if (availableDate) {
       this.selectedDate = availableDate;
+      console.log("Found date: ", availableDate);
       return;
     }
 
@@ -204,7 +205,6 @@ export class BookingCard extends LitElement {
       
       // Skip dates beyond maximum advance time
       if (date > maxAdvanceDate) continue;
-      
       const dateStr = date.toISOString().slice(0, 10);
       
       // Check if this day has business hours
@@ -215,7 +215,7 @@ export class BookingCard extends LitElement {
 
       if (!hasBusinessHours) continue;
 
-      // Check if there are available slots for this day
+      // Get bookable slots and their availability
       const slots = getBookableSlots(
         this.availability,
         slotDuration,
@@ -224,19 +224,29 @@ export class BookingCard extends LitElement {
         minimumLeadTime // Pass minimum lead time here too
       );
       
-      // For today, filter out past time slots
+      // Filter out unavailable time slots
       let availableSlots = slots.filter((slot: any) => slot.available);
-      
+
       if (date.toDateString() === today.toDateString()) {
         // Filter out past time slots for today
         availableSlots = availableSlots.filter((slot: any) => {
-          const [hours, minutes] = slot.time.split(':').map(Number);
+          const timeStr = slot.time.trim();
+          const [timePart, period] = timeStr.split(' ');
+          const [hours, minutes] = timePart.split(':').map(Number);
+          
+          let hour24 = hours;
+          if (period?.toUpperCase() === 'PM' && hours !== 12) {
+            hour24 = hours + 12;
+          } else if (period?.toUpperCase() === 'AM' && hours === 12) {
+            hour24 = 0;
+          }
+          
           const slotTime = new Date(date);
-          slotTime.setHours(hours, minutes, 0, 0);
+          slotTime.setHours(hour24, minutes, 0, 0);
           return slotTime > now;
         });
       }
-      
+
       if (availableSlots.length > 0) {
         return dateStr;
       }
