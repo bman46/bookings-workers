@@ -1,30 +1,14 @@
 {
-	"compilerOptions": {
-		/* Base Options: */
-		"esModuleInterop": true,
-		"skipLibCheck": true,
-		"target": "es2022",
-		"verbatimModuleSyntax": false,
-		"allowJs": true,
-		"resolveJsonModule": true,
-		"moduleDetection": "force",
-		/* Strictness */
-		"noImplicitAny": false,
-		"noImplicitThis": true,
-		"strictNullChecks": false,
-		"strict": true,
-		"noUncheckedIndexedAccess": true,
-		/* If NOT transpiling with TypeScript: */
-		"moduleResolution": "Bundler",
-		"module": "es2022",
-		"noEmit": true,
-		"lib": ["es2022"],
-		"types": [
-			"./worker-configuration.d.ts",
-			"@types/node",
-			"@types/service-worker-mock"
-		]
-	},
-	"exclude": ["node_modules", "dist", "tests"],
-	"include": ["src/worker", "worker-configuration.d.ts"]
+  "files": [],
+  "references": [
+    { "path": "./tsconfig.widget.json" },
+    { "path": "./tsconfig.worker.json" }
+  ],
+  "compilerOptions": {
+    "checkJs": true,
+    "verbatimModuleSyntax": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "noEmit": true
+  }
 }
