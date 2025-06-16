@@ -26,5 +26,5 @@
 		]
 	},
 	"exclude": ["node_modules", "dist", "tests"],
-	"include": ["src", "worker-configuration.d.ts"]
+	"include": ["src/worker", "worker-configuration.d.ts"]
 }

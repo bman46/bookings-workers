@@ -1,4 +1,4 @@
-export async function requestMicrosoftGraphJwt(env?: Record<string, string>): Promise<string> {
+export async function requestMicrosoftGraphJwt(env?: Env): Promise<string> {
     const tenantId = env.TENANT_ID;
     const clientId = env.CLIENT_ID;
     const clientSecret = env.CLIENT_SECRET;

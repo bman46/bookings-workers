@@ -75,7 +75,20 @@ export class CustomQuestionsFetch extends OpenAPIRoute {
             );
         }
 
-        const customQuestionsResponseData = await response.json();
+        const customQuestionsResponseData = await response.json() as { value?: unknown };
+
+        // Defensive: check if value exists and is an array
+        if (!Array.isArray(customQuestionsResponseData.value)) {
+            console.error("Response missing 'value' array:", customQuestionsResponseData);
+            return Response.json(
+                {
+                    success: false,
+                    error: "Invalid response structure from Microsoft Graph API",
+                    details: customQuestionsResponseData,
+                },
+                { status: 500 }
+            );
+        }
 
         const parseResult = z.array(CustomQuestion).safeParse(customQuestionsResponseData.value);
 
