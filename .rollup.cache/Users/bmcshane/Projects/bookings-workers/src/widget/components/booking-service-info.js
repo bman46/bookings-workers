@@ -48,7 +48,7 @@ BookingServiceInfo.styles = css `
     .info {
       display: flex;
       gap: 16px;
-      align-items: flex-start;
+      align-items: center;
       margin-bottom: 8px;
     }
     .avatar {
