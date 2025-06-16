@@ -9,7 +9,7 @@ export class BookingDatePicker extends LitElement {
   @property({ type: Number }) slotDuration = 15;
   @property({ type: Object }) currentWeekStart = new Date();
   @property({ type: Object }) maximumAdvanceDate = new Date();
-  @property({ type: String }) minimumLeadTime = ''; // Add minimum lead time property
+  @property({ type: String }) minimumLeadTime = '';
   @state() selectedDate = '';
 
   static styles = css`
@@ -151,17 +151,6 @@ export class BookingDatePicker extends LitElement {
         );
         
         let availableSlots = slotsForDay.filter(slot => slot.available);
-        
-        // For today, filter out past time slots
-        const now = new Date();
-        if (date.toDateString() === now.toDateString()) {
-          availableSlots = availableSlots.filter(slot => {
-            const [hours, minutes] = slot.time.split(':').map(Number);
-            const slotTime = new Date(date);
-            slotTime.setHours(hours, minutes, 0, 0);
-            return slotTime > now;
-          });
-        }
         
         hasAvailableSlots = availableSlots.length > 0;
       }

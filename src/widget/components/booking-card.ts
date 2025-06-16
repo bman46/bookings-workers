@@ -182,7 +182,7 @@ export class BookingCard extends LitElement {
       slotDuration,
       date,
       this.business?.businessHours || [],
-      minimumLeadTime // Pass minimum lead time
+      minimumLeadTime
     );
   }
 
@@ -193,7 +193,6 @@ export class BookingCard extends LitElement {
     const maxAdvanceDate = this.getMaximumAdvanceDate();
     const minimumLeadTime = this.selectedService?.schedulingPolicy?.minimumLeadTime;
     const today = new Date();
-    const now = new Date();
 
     // Check each day of the week
     for (let i = 0; i < 7; i++) {
@@ -215,37 +214,17 @@ export class BookingCard extends LitElement {
 
       if (!hasBusinessHours) continue;
 
-      // Get bookable slots and their availability
+      // Get bookable slots - getBookableSlots already handles past time filtering
       const slots = getBookableSlots(
         this.availability,
         slotDuration,
         dateStr,
         this.business?.businessHours || [],
-        minimumLeadTime // Pass minimum lead time here too
+        minimumLeadTime
       );
       
       // Filter out unavailable time slots
-      let availableSlots = slots.filter((slot: any) => slot.available);
-
-      if (date.toDateString() === today.toDateString()) {
-        // Filter out past time slots for today
-        availableSlots = availableSlots.filter((slot: any) => {
-          const timeStr = slot.time.trim();
-          const [timePart, period] = timeStr.split(' ');
-          const [hours, minutes] = timePart.split(':').map(Number);
-          
-          let hour24 = hours;
-          if (period?.toUpperCase() === 'PM' && hours !== 12) {
-            hour24 = hours + 12;
-          } else if (period?.toUpperCase() === 'AM' && hours === 12) {
-            hour24 = 0;
-          }
-          
-          const slotTime = new Date(date);
-          slotTime.setHours(hour24, minutes, 0, 0);
-          return slotTime > now;
-        });
-      }
+      const availableSlots = slots.filter((slot: any) => slot.available);
 
       if (availableSlots.length > 0) {
         return dateStr;
