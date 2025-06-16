@@ -46,7 +46,24 @@ export class BookingDatePicker extends LitElement {
     .days { 
       display: flex; 
       gap: 8px; 
-      margin-bottom: 8px; 
+      margin-bottom: 8px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+      -webkit-overflow-scrolling: touch;
+    }
+    .days::-webkit-scrollbar {
+      height: 4px;
+    }
+    .days::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 2px;
+    }
+    .days::-webkit-scrollbar-thumb {
+      background: #c1c1c1;
+      border-radius: 2px;
+    }
+    .days::-webkit-scrollbar-thumb:hover {
+      background: #a8a8a8;
     }
     .day {
       display: flex;
@@ -59,6 +76,7 @@ export class BookingDatePicker extends LitElement {
       font-weight: 500;
       cursor: pointer;
       min-width: 48px;
+      flex-shrink: 0;
       border: none;
       outline: none;
       transition: background 0.15s;
