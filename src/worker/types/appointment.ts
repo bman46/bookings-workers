@@ -31,4 +31,8 @@ export const AppointmentObject = z.object({
     optOutOfCustomerEmail: z.boolean().optional(),
     smsNotificationsEnabled: z.boolean().optional(),
     customers: z.array(CustomerObject),
+    isSelfServiceEnabled: z.boolean().optional(),
+    customerNotes: Str({ example: "No mayo on the sandwiches" }).optional(),
+    serviceNotes: Str({ example: "No mayo on the sandwiches" }).optional(),
+    serviceLocation: z.any().optional(),
 });

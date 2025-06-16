@@ -338,14 +338,15 @@ export class BookingForm extends LitElement {
         },
         isCustomerAllowedToManageBooking: true,
         optOutOfCustomerEmail: false,
-        smsNotificationsEnabled: true,
+        isSelfServiceEnabled: true,
+        customerNotes: this.notes || "",
+        serviceNotes: ("Customer note: "+this.notes) || "",
         customers: [
           {
             name: this.customerName,
             emailAddress: this.customerEmail,
-            phone: this.customerPhone.replace(/\D/g, ''), // Remove formatting
-            customQuestionAnswers: [], // Empty for now - can be extended later
-            notes: this.notes || ""
+            phone: this.customerPhone.replace(/\D/g, ''),
+            customQuestionAnswers: [],
           }
         ]
       };
