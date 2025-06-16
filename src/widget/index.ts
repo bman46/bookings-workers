@@ -1,1 +1,1 @@
-import './components/simple-greeting.ts';
+import './components/booking-card.ts';
