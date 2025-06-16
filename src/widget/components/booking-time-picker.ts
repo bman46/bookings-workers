@@ -11,11 +11,61 @@ export class BookingTimePicker extends LitElement {
   @property({ type: String }) selectedDate = ''; // 'YYYY-MM-DD'
   @property({ type: Object }) maximumAdvanceDate = new Date(); // Add this property
   @property({ type: String }) minimumLeadTime = ''; // Add this property
+  @state() selectedTime = ''; // Store selected time
 
   static styles = css`
     .section { margin-bottom: 18px; }
     .label { font-size: 0.98rem; color: #666; margin-bottom: 6px; font-weight: 500; }
   `;
+
+  handleTimeSelected(event: CustomEvent) {
+    const time = event.detail.time;
+    this.selectedTime = time;
+    
+    // Create a proper timestamp from the selected date and time
+    const selectedDateTime = this.createSelectedDateTime(this.selectedDate, time);
+    
+    // Log the selected date and time
+    console.log('Date and time selected:', {
+      date: this.selectedDate,
+      time: time,
+      timestamp: selectedDateTime.toISOString()
+    });
+    
+    // Dispatch event to parent component
+    this.dispatchEvent(new CustomEvent('time-selected', {
+      detail: { 
+        time,
+        date: this.selectedDate,
+        timestamp: selectedDateTime.toISOString()
+      },
+      bubbles: true,
+      composed: true
+    }));
+  }
+
+  private createSelectedDateTime(dateStr: string, timeStr: string): Date {
+    // Parse the date (YYYY-MM-DD format)
+    const [year, month, day] = dateStr.split('-').map(Number);
+    
+    // Parse the time (e.g., "9:30 AM" format)
+    const isPM = timeStr.includes('PM');
+    const isAM = timeStr.includes('AM');
+    const [timeOnly] = timeStr.split(' ');
+    const [hoursStr, minutesStr] = timeOnly.split(':');
+    let hours = parseInt(hoursStr, 10);
+    const minutes = parseInt(minutesStr, 10);
+    
+    // Convert to 24-hour format
+    if (isPM && hours !== 12) {
+      hours += 12;
+    } else if (isAM && hours === 12) {
+      hours = 0;
+    }
+    
+    // Create the date object (month is 0-indexed in JavaScript Date)
+    return new Date(year, month - 1, day, hours, minutes, 0, 0);
+  }
 
   getSlots(period: 'morning' | 'afternoon') {
     if (!this.selectedDate) {
@@ -62,11 +112,19 @@ export class BookingTimePicker extends LitElement {
     return html`
       <div class="section">
         <div class="label">Morning</div>
-        <booking-time-slot .times=${this.getSlots('morning')}></booking-time-slot>
+        <booking-time-slot 
+          .times=${this.getSlots('morning')}
+          .selectedTime=${this.selectedTime}
+          @time-selected=${this.handleTimeSelected}>
+        </booking-time-slot>
       </div>
       <div class="section">
         <div class="label">Afternoon</div>
-        <booking-time-slot .times=${this.getSlots('afternoon')}></booking-time-slot>
+        <booking-time-slot 
+          .times=${this.getSlots('afternoon')}
+          .selectedTime=${this.selectedTime}
+          @time-selected=${this.handleTimeSelected}>
+        </booking-time-slot>
       </div>
     `;
   }

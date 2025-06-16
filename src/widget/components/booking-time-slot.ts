@@ -8,6 +8,7 @@ interface TimeSlot {
 
 export class BookingTimeSlot extends LitElement {
   @property({ type: Array }) times: TimeSlot[] = [];
+  @property({ type: String }) selectedTime = '';
 
   static styles = css`
     .slots {
@@ -37,22 +38,38 @@ export class BookingTimeSlot extends LitElement {
       color: #bbb;
       cursor: not-allowed;
     }
+    .slot.selected {
+      background: #1769ff;
+      color: #fff;
+    }
   `;
+
+  handleTimeClick(time: string) {
+    console.log('Time slot clicked:', time);
+    this.dispatchEvent(new CustomEvent('time-selected', {
+      detail: { time },
+      bubbles: true,
+      composed: true
+    }));
+  }
 
   render() {
     return html`
       <div class="slots">
         ${this.times.map(
-          t => html`
+          slot => html`
             <button
-              class="slot"
-              ?disabled=${!t.available}
-              tabindex=${t.available ? 0 : -1}
-            >${t.time}</button>
+              class="slot ${slot.time === this.selectedTime ? 'selected' : ''}"
+              ?disabled=${!slot.available}
+              @click=${() => slot.available && this.handleTimeClick(slot.time)}
+            >
+              ${slot.time}
+            </button>
           `
         )}
       </div>
     `;
   }
 }
+
 customElements.define('booking-time-slot', BookingTimeSlot);
