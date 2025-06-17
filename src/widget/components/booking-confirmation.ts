@@ -260,7 +260,8 @@ export class BookingConfirmation extends LitElement {
   render() {
     if (!this.result) return html``;
 
-    const appointmentTimestamp = this.appointmentData?.startDateTime?.dateTime + 'Z'; // Add Z for UTC
+    // Don't add 'Z' since the dateTime is already in the customer's local timezone
+    const appointmentTimestamp = this.appointmentData?.startDateTime?.dateTime;
 
     return html`
       <div class="confirmation-container">

@@ -399,24 +399,33 @@ export class BookingForm extends LitElement {
       }
       
       const endDateTime = new Date(startDateTime.getTime() + durationMs);
-      
-      const formatDateTime = (date: Date) => {
-        return date.toISOString().slice(0, 19);
-      };
-      
-      const timeZone = "UTC";
+
       const customerTimeZone = getCustomerTimeZone();
+
+      // Convert UTC times to customer's local time using toLocaleString
+      const formatDateTimeForTimeZone = (utcDate: Date, timeZone: string) => {
+        return utcDate.toLocaleString('sv-SE', {
+          timeZone: timeZone,
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+          hour12: false
+        }).replace(' ', 'T');
+      };
       
       const appointmentData = {
         serviceId: this.selectedService?.id,
         staffMemberIds: this.selectedStaffIds.slice(0, 1),
         startDateTime: {
-          dateTime: formatDateTime(startDateTime),
-          timeZone: timeZone
+          dateTime: formatDateTimeForTimeZone(startDateTime, Intl.DateTimeFormat().resolvedOptions().timeZone),
+          timeZone: customerTimeZone
         },
         endDateTime: {
-          dateTime: formatDateTime(endDateTime),
-          timeZone: timeZone
+          dateTime: formatDateTimeForTimeZone(endDateTime, Intl.DateTimeFormat().resolvedOptions().timeZone),
+          timeZone: customerTimeZone
         },
         isCustomerAllowedToManageBooking: true,
         optOutOfCustomerEmail: false,
