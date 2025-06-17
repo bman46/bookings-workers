@@ -2,7 +2,7 @@
 
 [![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/bman46/bookings-workers.git)
 
-This project provides a complete booking widget solution for Microsoft 365 Bookings, featuring both a backend API and a customizable web component frontend. The backend is built as a Cloudflare Worker with OpenAPI compliance, while the frontend is a self-contained web component that can be embedded into any website. The widget handles the entire booking flow - from service selection and availability checking to appointment creation and confirmation - with intelligent timezone handling and a responsive design.
+This project provides a custom frontend and backend integration for Microsoft 365 Bookings. It enables a modern, user-friendly booking experience while leveraging Microsoft Bookings as the backend. The backend is OpenAPI-compliant, making it easy to integrate with the frontend and other systems. The frontend is built as a widget using LitElement web components, and the backend exposes endpoints for business info, services, staff availability, and appointment creation.
 
 ## Get started
 
