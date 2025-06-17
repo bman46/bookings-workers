@@ -20,6 +20,7 @@ export const CustomerObject = z.object({
     phone: Str({ example: "8888888888" }),
     customQuestionAnswers: z.array(bookingQuestionAnswer).optional(),
     notes: Str({ example: "No mayo on the sandwiches" }).optional(),
+    timeZone: Str({ example: "Pacific Standard Time" }),
 });
 
 export const AppointmentObject = z.object({
