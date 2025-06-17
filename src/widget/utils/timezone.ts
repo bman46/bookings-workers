@@ -173,3 +173,29 @@ export function getBrowserTimeZone(): string {
 export function getUTCOffset(): number {
   return new Date().getTimezoneOffset();
 }
+
+/**
+ * Converts Microsoft timezone name to IANA timezone identifier
+ * @param timeZone Microsoft timezone name or IANA identifier
+ * @returns IANA timezone identifier or the original value if already valid
+ */
+export function toIanaTimeZone(timeZone: string): string {
+  // First check if it's already a valid IANA timezone
+  try {
+    new Date().toLocaleString('en-US', { timeZone });
+    return timeZone; // It's already valid
+  } catch {
+    // Not a valid IANA timezone, try to convert from Microsoft format
+  }
+  
+  // Look up Microsoft timezone in our mapping
+  for (const [ianaZone, microsoftZone] of Object.entries(IANA_TO_MICROSOFT_TIMEZONE_MAP)) {
+    if (microsoftZone === timeZone) {
+      return ianaZone;
+    }
+  }
+  
+  // If we can't convert, return UTC as fallback
+  console.warn(`Unknown timezone: ${timeZone}, falling back to UTC`);
+  return 'UTC';
+}

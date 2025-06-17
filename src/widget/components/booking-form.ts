@@ -2,15 +2,16 @@ import { LitElement, html, css } from 'lit';
 import { property, state } from 'lit/decorators.js';
 import './error-display';
 import { parseISODuration } from '../utils/isoDuration';
-import { getCustomerTimeZone } from '../utils/timezone';
+import { getCustomerTimeZone, toIanaTimeZone } from '../utils/timezone';
 
 export class BookingForm extends LitElement {
   @property({ type: Object }) selectedService: any = null;
   @property({ type: String }) selectedTimestamp = '';
   @property({ type: String }) businessName = '';
-  @property({ type: Array }) selectedStaffIds: string[] = []; // Add staff IDs property
-  @property({ type: String }) apiUrl = ''; // Add API URL property
-  @property({ type: String }) bookingsId = ''; // Add bookings ID property
+  @property({ type: Array }) selectedStaffIds: string[] = [];
+  @property({ type: String }) apiUrl = '';
+  @property({ type: String }) bookingsId = '';
+  @property({ type: String }) businessTimeZone = ''; // Add business timezone property
 
   @state() customerName = '';
   @state() customerPhone = '';
@@ -400,32 +401,41 @@ export class BookingForm extends LitElement {
       
       const endDateTime = new Date(startDateTime.getTime() + durationMs);
 
+      // Use business timezone - convert to IANA format for JavaScript operations
+      const businessTimeZone = this.businessTimeZone || 'UTC';
+      const businessIanaTimeZone = toIanaTimeZone(businessTimeZone);
       const customerTimeZone = getCustomerTimeZone();
 
-      // Convert UTC times to customer's local time using toLocaleString
+      // Convert UTC times to business timezone using toLocaleString
       const formatDateTimeForTimeZone = (utcDate: Date, timeZone: string) => {
-        return utcDate.toLocaleString('sv-SE', {
-          timeZone: timeZone,
-          year: 'numeric',
-          month: '2-digit',
-          day: '2-digit',
-          hour: '2-digit',
-          minute: '2-digit',
-          second: '2-digit',
-          hour12: false
-        }).replace(' ', 'T');
+        try {
+          return utcDate.toLocaleString('sv-SE', {
+            timeZone: timeZone,
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: false
+          }).replace(' ', 'T');
+        } catch (error) {
+          console.error('Error formatting datetime for timezone:', timeZone, error);
+          // Fallback to UTC
+          return utcDate.toISOString().slice(0, 19);
+        }
       };
       
       const appointmentData = {
         serviceId: this.selectedService?.id,
         staffMemberIds: this.selectedStaffIds.slice(0, 1),
         startDateTime: {
-          dateTime: formatDateTimeForTimeZone(startDateTime, Intl.DateTimeFormat().resolvedOptions().timeZone),
-          timeZone: customerTimeZone
+          dateTime: formatDateTimeForTimeZone(startDateTime, businessIanaTimeZone),
+          timeZone: businessTimeZone // Keep original format for API
         },
         endDateTime: {
-          dateTime: formatDateTimeForTimeZone(endDateTime, Intl.DateTimeFormat().resolvedOptions().timeZone),
-          timeZone: customerTimeZone
+          dateTime: formatDateTimeForTimeZone(endDateTime, businessIanaTimeZone),
+          timeZone: businessTimeZone // Keep original format for API
         },
         isCustomerAllowedToManageBooking: true,
         optOutOfCustomerEmail: false,
@@ -443,8 +453,10 @@ export class BookingForm extends LitElement {
         ]
       };
 
-      console.log('Appointment data with customer timezone:', appointmentData);
-      console.log('Customer timezone detected as:', customerTimeZone);
+      console.log('Appointment data:', appointmentData);
+      console.log('Business timezone (original):', businessTimeZone);
+      console.log('Business timezone (IANA):', businessIanaTimeZone);
+      console.log('Customer timezone:', customerTimeZone);
 
       const response = await this.makeApiRequest(
         `${this.apiUrl}/solutions/bookingBusinesses/${encodeURIComponent(this.bookingsId)}/appointments`,

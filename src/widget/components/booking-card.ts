@@ -515,6 +515,7 @@ export class BookingCard extends LitElement {
             .selectedTimestamp=${this.selectedTimestamp}
             .selectedStaffIds=${this.selectedStaffIds || []}
             .businessName=${this.business?.displayName || ''}
+            .businessTimeZone=${this.business?.bookingPageSettings?.businessTimeZone || 'Coordinated Universal Time'}
             .apiUrl=${this.apiUrl}
             .bookingsId=${this.bookingsId}
             @booking-confirmed=${this.handleBookingConfirmed}
