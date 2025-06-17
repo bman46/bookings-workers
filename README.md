@@ -2,8 +2,7 @@
 
 [![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/bman46/bookings-workers.git)
 
-
-This project is designed to enable a custom frontend with Microsoft 365 Bookings. It is designed to be OpenAPI compliant for easy integration with the frontend.
+This project provides a complete booking widget solution for Microsoft 365 Bookings, featuring both a backend API and a customizable web component frontend. The backend is built as a Cloudflare Worker with OpenAPI compliance, while the frontend is a self-contained web component that can be embedded into any website. The widget handles the entire booking flow - from service selection and availability checking to appointment creation and confirmation - with intelligent timezone handling and a responsive design.
 
 ## Get started
 
@@ -72,3 +71,11 @@ BookingsAppointment.ReadWrite.All
 10. Click `Add Permissions` to set the permissions. Then, click `Grant Admin Consent for [COMPANY]` button to grant the app access to these API endpoints.
 
 9. Return to either the [Development](#Development) or [Deployment](#Deployment) instructions.
+
+## Pictures
+### Time selection
+![Time selection screen](docs/images/times.png)
+### Customer Information
+![Customer information](docs/images/information.png)
+### Confirmation Screen
+![Customer information](docs/images/confirmation.png)
