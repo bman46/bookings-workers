@@ -2,6 +2,7 @@ import { LitElement, html, css } from 'lit';
 import { property, state } from 'lit/decorators.js';
 import './booking-time-slot';
 import { getBookableSlots } from '../utils/slots';
+import { getCustomerTimeZone, toIanaTimeZone } from '../utils/timezone';
 
 export class BookingTimePicker extends LitElement {
   @property({ type: Array }) availability: any[] = [];
@@ -146,10 +147,11 @@ export class BookingTimePicker extends LitElement {
     // Try to get a user-friendly timezone name
     if (this.timeZone) {
       try {
-        // Convert business timezone to a more readable format
+        // Convert business timezone to IANA format for display
+        const businessIanaTimeZone = toIanaTimeZone(this.timeZone);
         const sampleDate = new Date();
         const formatter = new Intl.DateTimeFormat('en-US', {
-          timeZone: this.timeZone,
+          timeZone: businessIanaTimeZone,
           timeZoneName: 'long'
         });
         const parts = formatter.formatToParts(sampleDate);
@@ -162,8 +164,22 @@ export class BookingTimePicker extends LitElement {
     return 'Local time';
   }
 
+  private shouldShowTimezoneNote(): boolean {
+    console.log("Timezone note biz: ", this.timeZone);
+    if (!this.timeZone) return false;
+    
+    const customerTimeZone = getCustomerTimeZone();
+    console.log("Timezone note customer: ", customerTimeZone);
+    return customerTimeZone !== this.timeZone;
+  }
+
   render() {
     return html`
+      ${this.shouldShowTimezoneNote() ? html`
+        <div class="timezone-note">
+          Times shown in ${this.getTimezoneDisplayName()}
+        </div>
+      ` : ''}
       <div class="section">
         <div class="label">Morning</div>
         <booking-time-slot 
@@ -185,9 +201,6 @@ export class BookingTimePicker extends LitElement {
             this.handleTimeSelected(e);
           }}>
         </booking-time-slot>
-      </div>
-      <div class="timezone-note">
-        Times shown in ${this.getTimezoneDisplayName()}
       </div>
     `;
   }
