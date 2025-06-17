@@ -1,6 +1,7 @@
 import { LitElement, html, css } from 'lit';
 import { property, state } from 'lit/decorators.js';
 import { parseISODuration } from '../utils/isoDuration';
+import './booking-confirmation';
 
 export class BookingForm extends LitElement {
   @property({ type: Object }) selectedService: any = null;

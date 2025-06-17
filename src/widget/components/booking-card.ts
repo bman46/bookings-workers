@@ -4,6 +4,7 @@ import './booking-service-info';
 import './booking-date-picker';
 import './booking-time-picker';
 import './booking-form'; // Import the booking form component
+import './booking-confirmation'; // Import the confirmation component
 import { parseISODuration } from '../utils/isoDuration';
 import { getBookableSlots } from '../utils/slots';
 
@@ -24,6 +25,8 @@ export class BookingCard extends LitElement {
   @state() showBookingForm = false; // Add this state property
   @state() selectedTimestamp = ''; // Change from selectedTime to selectedTimestamp
   @state() selectedStaffIds: string[] = []; // Add staff IDs property
+  @state() showConfirmation = false; // Add confirmation state
+  @state() confirmationData: any = null; // Store confirmation data
 
   static styles = css`
     .card {
@@ -349,23 +352,46 @@ export class BookingCard extends LitElement {
 
   // Add the missing booking confirmed handler
   handleBookingConfirmed(e: CustomEvent) {
-    // Handle successful booking - could dispatch event, show confirmation, etc.
+    // Handle successful booking - show confirmation screen
     console.log('Booking confirmed:', e.detail);
     
-    // Reset the form state
+    // Store confirmation data
+    this.confirmationData = e.detail;
+    
+    // Show confirmation screen
+    this.showBookingForm = false;
+    this.showConfirmation = true;
+  }
+
+  // Handle when user clicks "Done" on confirmation screen
+  handleBookingDone() {
+    // Reset all states to start over
+    this.showConfirmation = false;
     this.showBookingForm = false;
     this.selectedTimestamp = '';
     this.selectedStaffIds = [];
+    this.confirmationData = null;
     
-    // You could dispatch a custom event to notify parent components
-    this.dispatchEvent(new CustomEvent('booking-completed', {
-      detail: e.detail,
-      bubbles: true,
-      composed: true
-    }));
+    // Optionally refresh availability
+    this.fetchAvailability();
   }
 
   render() {
+    if (this.showConfirmation && this.confirmationData) {
+      // Show confirmation screen
+      return html`
+        <div class="card">
+          <booking-confirmation
+            .appointmentData=${this.confirmationData.appointmentData}
+            .result=${this.confirmationData.result}
+            .customerName=${this.confirmationData.customer.name}
+            .customerEmail=${this.confirmationData.customer.email}
+            @booking-done=${this.handleBookingDone}>
+          </booking-confirmation>
+        </div>
+      `;
+    }
+
     if (this.showBookingForm && this.selectedTimestamp) {
       // Show booking form with service info at top
       return html`
