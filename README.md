@@ -74,8 +74,10 @@ BookingsAppointment.ReadWrite.All
 
 ## Pictures
 ### Time selection
-<img src="docs/images/times.png" alt="Time selection screen" width="300">
+<img src="docs/images/times.png" alt="Time selection screen" width="300" />
+
 ### Customer Information
-<img src="docs/images/information.png" alt="Customer information" width="300">
+<img src="docs/images/information.png" alt="Customer information" width="300" />
+
 ### Confirmation Screen
-<img src="docs/images/confirmation.png" alt="Booking confirmation" width="300">
+<img src="docs/images/confirmation.png" alt="Booking confirmation" width="300" />
