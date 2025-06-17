@@ -37,7 +37,7 @@ ALLOWED_ORIGINS=[Domain/subdomain that can use this widget],[another (optional) 
 ```
 
 > [!TIP]
-> If you already deployed the app, you can add this using the [Cloudflare Dashboard](https://developers.cloudflare.com/workers/configuration/environment-variables/#add-environment-variables-via-the-dashboard)
+> If you already deployed the app, you can add this using the [Cloudflare Dashboard](https://developers.cloudflare.com/workers/configuration/environment-variables/#add-environment-variables-via-the-dashboard).
 
 4. Embed the widget into your website. Example:
 ```html
