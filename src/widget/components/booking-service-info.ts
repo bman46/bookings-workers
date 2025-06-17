@@ -55,10 +55,21 @@ export class BookingServiceInfo extends LitElement {
   `;
 
   renderAvatar() {
-    // If icon is a URL, use <img>. If it's an emoji, render as text.
-    if (this.icon && (this.icon.startsWith('http://') || this.icon.startsWith('https://'))) {
-      return html`<img class="avatar" src="${this.icon}" alt="Service" />`;
-    } else if (this.icon) {
+    // Allow: absolute URLs, relative paths, or emoji
+    if (this.icon) {
+      // If icon is an absolute URL (http/https), use <img>
+      if (this.icon.startsWith('http://') || this.icon.startsWith('https://')) {
+        return html`<img class="avatar" src="${this.icon}" alt="Service" />`;
+      }
+      // If icon is a relative path (starts with / or ./ or ../), use <img>
+      if (
+        this.icon.startsWith('/') ||
+        this.icon.startsWith('./') ||
+        this.icon.startsWith('../')
+      ) {
+        return html`<img class="avatar" src="${this.icon}" alt="Service" />`;
+      }
+      // Otherwise, treat as emoji/text
       return html`<div class="avatar emoji">${this.icon}</div>`;
     }
     // fallback
