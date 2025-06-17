@@ -10,13 +10,9 @@ function generateHeaders() {
   return {
     name: 'generate-headers',
     buildEnd() {
-      const allowedOrigins = process.env.ALLOWED_ORIGINS;
-      if (!allowedOrigins) {
-        console.log('ALLOWED_ORIGINS not set, skipping dist/_headers generation.');
-        return;
-      }
-      const headers = `/*
-  Access-Control-Allow-Origin: ${allowedOrigins}
+      // * CORS header for static widget files. The API is protected seperately.
+      const headers = `/widget/*
+  Access-Control-Allow-Origin: *
   Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS
   Access-Control-Allow-Headers: Content-Type
   Access-Control-Expose-Headers: Content-Length
@@ -27,7 +23,7 @@ function generateHeaders() {
         fs.mkdirSync(distDir, { recursive: true });
       }
       fs.writeFileSync(path.join(distDir, '_headers'), headers);
-      console.log('Generated dist/_headers with CORS policy:', allowedOrigins);
+      console.log('Generated static cors policy:\n', headers);
     }
   };
 }
@@ -45,7 +41,7 @@ const copyConfig = {
 const config = {
   input: 'src/widget/index.ts',
   output: {
-    dir: 'dist/',
+    dir: 'dist/widget/',
     format: 'es',
     sourcemap: true,
   },
