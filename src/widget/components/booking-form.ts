@@ -459,7 +459,7 @@ export class BookingForm extends LitElement {
       console.log('Customer timezone:', customerTimeZone);
 
       const response = await this.makeApiRequest(
-        `${this.apiUrl}/solutions/bookingBusinesses/${encodeURIComponent(this.bookingsId)}/appointments`,
+        `${this.apiUrl}/api/solutions/bookingBusinesses/${encodeURIComponent(this.bookingsId)}/appointments`,
         {
           method: 'POST',
           headers: {
