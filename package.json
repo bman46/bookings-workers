@@ -2,7 +2,9 @@
   "name": "cloudflare-workers-openapi",
   "version": "0.0.1",
   "private": true,
+  "type": "module",
   "scripts": {
+    "build": "rollup -c",
     "deploy": "wrangler deploy",
     "dev": "wrangler dev",
     "start": "wrangler dev",
@@ -11,11 +13,19 @@
   "dependencies": {
     "chanfana": "^2.6.3",
     "hono": "^4.6.20",
+    "lit": "^3.3.0",
+    "tslib": "^2.8.1",
+    "webcomponents": "^0.1.4",
     "zod": "^3.24.1"
   },
   "devDependencies": {
+    "@rollup/plugin-node-resolve": "^16.0.1",
+    "@rollup/plugin-terser": "^0.4.4",
+    "@rollup/plugin-typescript": "^12.1.2",
     "@types/node": "22.13.0",
     "@types/service-worker-mock": "^2.0.4",
+    "rollup": "^4.43.0",
+    "rollup-plugin-copy": "^3.5.0",
     "wrangler": "^4.20.0"
   }
 }

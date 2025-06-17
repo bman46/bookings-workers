@@ -20,6 +20,7 @@ export const CustomerObject = z.object({
     phone: Str({ example: "8888888888" }),
     customQuestionAnswers: z.array(bookingQuestionAnswer).optional(),
     notes: Str({ example: "No mayo on the sandwiches" }).optional(),
+    timeZone: Str({ example: "Pacific Standard Time" }),
 });
 
 export const AppointmentObject = z.object({
@@ -31,4 +32,8 @@ export const AppointmentObject = z.object({
     optOutOfCustomerEmail: z.boolean().optional(),
     smsNotificationsEnabled: z.boolean().optional(),
     customers: z.array(CustomerObject),
+    isSelfServiceEnabled: z.boolean().optional(),
+    customerNotes: Str({ example: "No mayo on the sandwiches" }).optional(),
+    serviceNotes: Str({ example: "No mayo on the sandwiches" }).optional(),
+    serviceLocation: z.any().optional(),
 });

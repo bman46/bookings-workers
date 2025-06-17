@@ -5,13 +5,17 @@
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
 	"name": "bookings-workers",
-	"main": "src/index.ts",
+	"main": "src/worker/index.ts",
 	"compatibility_date": "2025-06-14",
+	"build": {
+		"command": "npm run build",
+		"watch_dir": "src/"
+	},
 	"observability": {
 		"enabled": true
 	},
 	"assets": {
-		"directory": "./widget",
+		"directory": "./dist",
   	}
 	/**
 	 * Smart Placement

@@ -83,7 +83,7 @@ export class StaffAvailabilityFetch extends OpenAPIRoute {
             );
         }
 
-        const availabilityResponseData = await response.json();
+        const availabilityResponseData = await response.json() as { value?: unknown };
 
         const parseResult = z.array(StaffAvailabilityItem).safeParse(availabilityResponseData.value);
 

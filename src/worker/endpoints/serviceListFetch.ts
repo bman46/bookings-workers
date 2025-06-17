@@ -76,7 +76,7 @@ export class ServiceList extends OpenAPIRoute {
 			);
 		}
 
-		const servicesResponse = await response.json();
+		const servicesResponse = await response.json() as { value?: unknown };
 
 		const servicesArray = Array.isArray(servicesResponse.value) ? servicesResponse.value : [];
 
