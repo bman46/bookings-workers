@@ -178,3 +178,6 @@ tsconfig.*.tsbuildinfo
 
 # Rollup cache
 .rollup.cache
+
+# Mac stuff:
+.DS_Store
