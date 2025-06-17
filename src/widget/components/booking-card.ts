@@ -38,7 +38,6 @@ export class BookingCard extends LitElement {
       border-radius: 12px;
       padding: 24px;
       background: #fff;
-      max-width: 420px;
       margin: 0 auto;
       font-family: system-ui, sans-serif;
     }
