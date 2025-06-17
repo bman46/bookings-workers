@@ -28,13 +28,17 @@ CLIENT_SECRET=[Client secret value]
 
 1. Sign up for [Cloudflare Workers](https://workers.dev). The free tier is more than enough for most use cases.
 2. Deploy to CloudFlare: [![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/bman46/bookings-workers.git)
-3. Set the following [Cloudflare Worker secrets](https://developers.cloudflare.com/workers/configuration/secrets/#via-the-dashboard):
+3. On the deploy screen, under `Advanced settings > Build variables` add the following variables. Click the encrypt button for `CLIENT_SECRET`:
 ```
 TENANT_ID=[Directory (tenant) ID]
 CLIENT_ID=[Application (client) ID]
 CLIENT_SECRET=[Client secret value]
 ALLOWED_ORIGINS=[Domain/subdomain that can use this widget],[another (optional) domain/subdomain that can use this widget]
 ```
+
+> [!TIP]
+> If you already deployed the app, you can add this using the [Cloudflare Dashboard](https://developers.cloudflare.com/workers/configuration/environment-variables/#add-environment-variables-via-the-dashboard)
+
 4. Embed the widget into your website. Example:
 ```html
 <!DOCTYPE html>
