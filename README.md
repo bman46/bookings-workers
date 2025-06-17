@@ -19,9 +19,10 @@ TENANT_ID=[Directory (tenant) ID]
 CLIENT_ID=[Application (client) ID]
 CLIENT_SECRET=[Client secret value]
 ```
-3. Run `wrangler dev` to start a local instance of the API.
-4. Open `http://localhost:8787/docs` in your browser to see the Swagger interface where you can try the endpoints.
-5. Changes made in the `src/` folder will automatically trigger the server to reload, you only need to refresh the Swagger interface.
+3. Update [index.html](dist/index.html) with information about your booking page.
+4. Run `wrangler dev` to start a local instance of the API.
+5. Open `http://localhost:8787/docs` in your browser to see the Swagger interface where you can try the endpoints.
+6. Changes made in the `src/` folder will automatically trigger the server to reload, you only need to refresh the Swagger interface.
 
 ## Deployment
 
