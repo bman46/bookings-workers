@@ -381,7 +381,7 @@ export class BookingCard extends LitElement {
         'Services fetch'
       );
       const servicesJson = await servicesRes.json();
-      this.services = servicesJson.services?.results || [];
+      this.services = servicesJson.results || [];
 
       if (this.services.length === 0) {
         throw new Error('No services available for booking');

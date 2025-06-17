@@ -45,13 +45,17 @@ export class ServiceList extends OpenAPIRoute {
 		// Retrieve the validated slug
 		const { bookingBusinessesSlug } = data.params;
 
-		console.log("bookingBusinessesSlug:", bookingBusinessesSlug);
-
 		// Fetch from MSFT graph API
 		const jwt = await requestMicrosoftGraphJwt(c.env);
 
+		// Construct a $select query from the Zod schema to fetch only the fields we need.
+		const fields = Object.keys(service.shape);
+		const selectQuery = `$select=${fields.join(",")}`;
+
 		const response = await fetch(
-			`https://graph.microsoft.com/v1.0/solutions/bookingBusinesses/${encodeURIComponent(bookingBusinessesSlug)}/services`,
+			`https://graph.microsoft.com/v1.0/solutions/bookingBusinesses/${encodeURIComponent(
+				bookingBusinessesSlug,
+			)}/services?${selectQuery}`,
 			{
 				method: "GET",
 				headers: {
@@ -76,7 +80,7 @@ export class ServiceList extends OpenAPIRoute {
 			);
 		}
 
-		const servicesResponse = await response.json() as { value?: unknown };
+		const servicesResponse = (await response.json()) as { value?: unknown };
 
 		const servicesArray = Array.isArray(servicesResponse.value) ? servicesResponse.value : [];
 
@@ -95,10 +99,8 @@ export class ServiceList extends OpenAPIRoute {
 		}
 
 		return {
-			services: {
-				success: true,
-				results: parsedServices.data,
-			},
+			success: true,
+			results: parsedServices.data,
 		};
 	}
 }

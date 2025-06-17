@@ -50,8 +50,15 @@ export class bookingBusinessesFetch extends OpenAPIRoute {
 		// Fetch from MSFT graph API
 		const jwt = await requestMicrosoftGraphJwt(c.env);
 
+		// Construct a $select query from the Zod schema to fetch only the fields we need.
+		// This reduces payload size and parsing time.
+		const fields = Object.keys(bookingBusinesses.shape);
+		const selectQuery = `$select=${fields.join(",")}`;
+
 		const response = await fetch(
-			`https://graph.microsoft.com/v1.0/solutions/bookingBusinesses/${encodeURIComponent(bookingBusinessesSlug)}`,
+			`https://graph.microsoft.com/v1.0/solutions/bookingBusinesses/${encodeURIComponent(
+				bookingBusinessesSlug,
+			)}?${selectQuery}`,
 			{
 				method: "GET",
 				headers: {
