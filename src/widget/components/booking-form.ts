@@ -1,7 +1,7 @@
 import { LitElement, html, css } from 'lit';
 import { property, state } from 'lit/decorators.js';
+import './error-display'; // Import the new error component
 import { parseISODuration } from '../utils/isoDuration';
-import './booking-confirmation';
 
 export class BookingForm extends LitElement {
   @property({ type: Object }) selectedService: any = null;
@@ -18,6 +18,11 @@ export class BookingForm extends LitElement {
   @state() showNotes = false;
   @state() isSubmitting = false;
   @state() errors: { [key: string]: string } = {};
+  @state() submitRetryCount = 0;
+  @state() maxSubmitRetries = 2;
+  @state() submitError = '';
+  @state() showRetryDialog = false;
+  @state() retryErrorMessage = '';
 
   static styles = css`
     .appointment-summary {
@@ -188,6 +193,49 @@ export class BookingForm extends LitElement {
     @keyframes spin {
       to { transform: rotate(360deg); }
     }
+
+    .submit-error {
+      background: #fff5f5;
+      border: 1px solid #fed7d7;
+      border-radius: 6px;
+      padding: 12px;
+      margin-bottom: 16px;
+    }
+    
+    .submit-error-message {
+      color: #c53030;
+      font-size: 0.9rem;
+      font-weight: 500;
+      margin-bottom: 8px;
+    }
+    
+    .submit-error-details {
+      color: #742a2a;
+      font-size: 0.85rem;
+      line-height: 1.4;
+    }
+    
+    .overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    
+    .retry-dialog {
+      background: white;
+      padding: 24px;
+      border-radius: 12px;
+      max-width: 400px;
+      margin: 20px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    }
   `;
 
   private formatDateTime(timestamp: string): string {
@@ -279,6 +327,40 @@ export class BookingForm extends LitElement {
     return isValid;
   }
 
+  private async makeApiRequest(url: string, options: RequestInit = {}, context: string): Promise<Response> {
+    const maxRetries = 3;
+    let lastError: Error | null = null;
+
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        const response = await fetch(url, {
+          ...options,
+          signal: AbortSignal.timeout(15000) // 15 second timeout for booking submission
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        return response;
+      } catch (error) {
+        lastError = error as Error;
+        console.error(`${context} attempt ${attempt} failed:`, error);
+
+        const errorMessage = lastError.message;
+        if (attempt < maxRetries && !errorMessage.includes('400')) {
+          // Don't retry on client errors (400 range)
+          await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000));
+        } else {
+          break;
+        }
+      }
+    }
+
+    throw lastError || new Error(`${context} failed after ${maxRetries} attempts`);
+  }
+
   private async handleSubmit(e: Event) {
     e.preventDefault();
     
@@ -287,11 +369,12 @@ export class BookingForm extends LitElement {
     }
 
     this.isSubmitting = true;
+    this.submitError = ''; // Clear any previous errors
 
     try {
       // Calculate end time based on service duration
       const startDateTime = new Date(this.selectedTimestamp);
-      const serviceDuration = this.selectedService?.defaultDuration || 'PT15M'; // Default 15 minutes
+      const serviceDuration = this.selectedService?.defaultDuration || 'PT15M';
       
       // Parse ISO duration using the utility
       const duration = parseISODuration(serviceDuration);
@@ -354,28 +437,30 @@ export class BookingForm extends LitElement {
 
       console.log('Appointment data:', appointmentData);
 
-      // Make actual API call to your worker endpoint
-      const response = await fetch(`${this.apiUrl}/solutions/bookingBusinesses/${encodeURIComponent(this.bookingsId)}/appointments`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+      const response = await this.makeApiRequest(
+        `${this.apiUrl}/solutions/bookingBusinesses/${encodeURIComponent(this.bookingsId)}/appointments`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(appointmentData)
         },
-        body: JSON.stringify(appointmentData)
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
-      }
+        'Appointment booking'
+      );
 
       const result = await response.json();
       console.log('Appointment created successfully:', result);
 
-      // Dispatch booking confirmed event with both original and formatted data
+      // Reset retry count and errors on success
+      this.submitRetryCount = 0;
+      this.submitError = '';
+
+      // Dispatch booking confirmed event
       this.dispatchEvent(new CustomEvent('booking-confirmed', {
         detail: {
-          appointmentData, // The formatted object for API
-          result, // The response from the API
+          appointmentData,
+          result,
           service: this.selectedService,
           timestamp: this.selectedTimestamp,
           staffIds: this.selectedStaffIds,
@@ -393,19 +478,44 @@ export class BookingForm extends LitElement {
     } catch (error) {
       console.error('Booking failed:', error);
       
-      // Handle the unknown error type properly
-      let errorMessage = 'An unexpected error occurred';
-      if (error instanceof Error) {
-        errorMessage = error.message;
-      } else if (typeof error === 'string') {
-        errorMessage = error;
-      }
+      const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred';
       
-      // Show user-friendly error message
-      alert(`Booking failed: ${errorMessage}`);
-    } finally {
-      this.isSubmitting = false;
+      // Check if we can retry
+      if (this.submitRetryCount < this.maxSubmitRetries && !errorMessage.includes('400')) {
+        this.showRetryPrompt(errorMessage);
+      } else {
+        // Show final error message
+        this.submitError = errorMessage;
+        this.isSubmitting = false;
+      }
     }
+  }
+
+  private showRetryPrompt(errorMessage: string) {
+    this.retryErrorMessage = errorMessage;
+    this.showRetryDialog = true;
+    this.isSubmitting = false;
+  }
+
+  private handleRetryConfirm() {
+    this.showRetryDialog = false;
+    this.submitRetryCount++;
+    
+    // Retry after a delay
+    const retryDelay = Math.pow(2, this.submitRetryCount) * 1000;
+    setTimeout(() => {
+      const fakeEvent = new Event('submit');
+      this.handleSubmit(fakeEvent);
+    }, retryDelay);
+  }
+
+  private handleRetryCancel() {
+    this.showRetryDialog = false;
+    this.submitError = this.retryErrorMessage;
+  }
+
+  private clearError() {
+    this.submitError = '';
   }
 
   private handleChangeAppointment() {
@@ -505,6 +615,18 @@ export class BookingForm extends LitElement {
         </button>
       </div>
 
+      <!-- Error Display -->
+      ${this.submitError ? html`
+        <div class="submit-error">
+          <div class="submit-error-message">Booking Failed</div>
+          <div class="submit-error-details">
+            ${this.submitError}
+            <br><br>
+            Please check your information and try again, or contact support if the problem persists.
+          </div>
+        </div>
+      ` : ''}
+
       <!-- Customer Details Form -->
       <form @submit=${this.handleSubmit}>
         <div class="form-section">
@@ -519,6 +641,7 @@ export class BookingForm extends LitElement {
               @input=${(e: Event) => {
                 this.customerName = (e.target as HTMLInputElement).value;
                 if (this.errors.name) delete this.errors.name;
+                if (this.submitError) this.clearError();
               }}
               placeholder="Enter your name"
               ?disabled=${this.isSubmitting}
@@ -532,7 +655,10 @@ export class BookingForm extends LitElement {
               type="tel"
               id="phone"
               .value=${this.customerPhone}
-              @input=${this.handlePhoneInput}
+              @input=${(e: Event) => {
+                this.handlePhoneInput(e);
+                if (this.submitError) this.clearError();
+              }}
               @keydown=${this.handlePhoneKeydown}
               placeholder="(555) 123-4567"
               maxlength="14"
@@ -550,6 +676,7 @@ export class BookingForm extends LitElement {
               @input=${(e: Event) => {
                 this.customerEmail = (e.target as HTMLInputElement).value;
                 if (this.errors.email) delete this.errors.email;
+                if (this.submitError) this.clearError();
               }}
               placeholder="Enter your email address"
               ?disabled=${this.isSubmitting}
@@ -568,7 +695,10 @@ export class BookingForm extends LitElement {
                 <textarea
                   id="notes"
                   .value=${this.notes}
-                  @input=${(e: Event) => this.notes = (e.target as HTMLTextAreaElement).value}
+                  @input=${(e: Event) => {
+                    this.notes = (e.target as HTMLTextAreaElement).value;
+                    if (this.submitError) this.clearError();
+                  }}
                   placeholder="Any special requests or notes..."
                   ?disabled=${this.isSubmitting}
                 ></textarea>
@@ -582,6 +712,29 @@ export class BookingForm extends LitElement {
           ${this.isSubmitting ? 'Confirming Booking...' : 'Confirm Booking'}
         </button>
       </form>
+
+      <!-- Retry Dialog -->
+      ${this.showRetryDialog ? html`
+        <div class="overlay">
+          <div class="retry-dialog">
+            <error-display
+              title="Booking Failed"
+              .message=${this.retryErrorMessage}
+              .retryCount=${this.submitRetryCount}
+              .maxRetries=${this.maxSubmitRetries}
+              retryButtonText="Try Again"
+              @retry=${this.handleRetryConfirm}>
+            </error-display>
+            <div style="margin-top: 16px; text-align: center;">
+              <button 
+                style="padding: 8px 16px; border: 1px solid #ddd; background: white; border-radius: 4px; cursor: pointer;"
+                @click=${this.handleRetryCancel}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      ` : ''}
     `;
   }
 }

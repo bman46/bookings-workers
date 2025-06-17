@@ -3,8 +3,9 @@ import { property, state } from 'lit/decorators.js';
 import './booking-service-info';
 import './booking-date-picker';
 import './booking-time-picker';
-import './booking-form'; // Import the booking form component
-import './booking-confirmation'; // Import the confirmation component
+import './booking-form';
+import './booking-confirmation';
+import './error-display'; // Import the new error component
 import { parseISODuration } from '../utils/isoDuration';
 import { getBookableSlots } from '../utils/slots';
 
@@ -27,6 +28,9 @@ export class BookingCard extends LitElement {
   @state() selectedStaffIds: string[] = []; // Add staff IDs property
   @state() showConfirmation = false; // Add confirmation state
   @state() confirmationData: any = null; // Store confirmation data
+  @state() retryCount = 0;
+  @state() maxRetries = 3;
+  @state() isRetrying = false;
 
   static styles = css`
     .card {
@@ -116,6 +120,36 @@ export class BookingCard extends LitElement {
     this.fetchAll();
   }
 
+  private async makeApiRequest(url: string, options: RequestInit = {}, context: string): Promise<Response> {
+    const maxRetries = 3;
+    let lastError: Error | null = null;
+
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        const response = await fetch(url, {
+          ...options,
+          signal: AbortSignal.timeout(10000) // 10 second timeout
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        return response;
+      } catch (error) {
+        lastError = error as Error;
+        console.error(`${context} attempt ${attempt} failed:`, error);
+
+        if (attempt < maxRetries) {
+          // Wait before retry (exponential backoff)
+          await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000));
+        }
+      }
+    }
+
+    throw new Error(`${context} failed after ${maxRetries} attempts: ${lastError?.message || 'Unknown error'}`);
+  }
+
   async fetchAvailability(weekStart?: string, weekEnd?: string) {
     if (!this.selectedService || !this.business) return;
 
@@ -139,18 +173,28 @@ export class BookingCard extends LitElement {
     };
 
     try {
-      const availRes = await fetch(`${this.apiUrl}/solutions/bookingBusinesses/${encodeURIComponent(this.bookingsId)}/staffAvailability`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ staffIds, startDateTime, endDateTime }),
-      });
+      const availRes = await this.makeApiRequest(
+        `${this.apiUrl}/solutions/bookingBusinesses/${encodeURIComponent(this.bookingsId)}/staffAvailability`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ staffIds, startDateTime, endDateTime }),
+        },
+        'Staff availability fetch'
+      );
+
       const availJson = await availRes.json();
       this.availability = availJson.results || [];
 
       // After fetching availability, find the nearest available date if none selected
       // Force re-selection even if a date was previously selected to ensure accuracy
       await this.selectNearestAvailableDate();
+      
+      // Clear any previous errors
+      this.error = '';
     } catch (e) {
+      const errorMessage = e instanceof Error ? e.message : 'Unknown error occurred';
+      this.error = `Unable to load available appointments: ${errorMessage}`;
       console.error('Failed to fetch availability:', e);
     }
   }
@@ -228,14 +272,21 @@ export class BookingCard extends LitElement {
     };
 
     try {
-      const availRes = await fetch(`${this.apiUrl}/solutions/bookingBusinesses/${encodeURIComponent(this.bookingsId)}/staffAvailability`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ staffIds, startDateTime, endDateTime }),
-      });
+      const availRes = await this.makeApiRequest(
+        `${this.apiUrl}/solutions/bookingBusinesses/${encodeURIComponent(this.bookingsId)}/staffAvailability`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ staffIds, startDateTime, endDateTime }),
+        },
+        'Week availability fetch'
+      );
+
       const availJson = await availRes.json();
       this.availability = availJson.results || [];
     } catch (e) {
+      const errorMessage = e instanceof Error ? e.message : 'Unknown error occurred';
+      this.error = `Failed to load appointments for selected week: ${errorMessage}`;
       console.error('Failed to fetch availability for week:', e);
     }
   }
@@ -307,16 +358,35 @@ export class BookingCard extends LitElement {
   }
 
   async fetchAll() {
+    this.loading = true;
+    this.error = '';
+
     try {
       // 1. Fetch business info
-      const businessRes = await fetch(`${this.apiUrl}/api/tasks/${encodeURIComponent(this.bookingsId)}`);
+      const businessRes = await this.makeApiRequest(
+        `${this.apiUrl}/api/tasks/${encodeURIComponent(this.bookingsId)}`,
+        {},
+        'Business info fetch'
+      );
       const businessJson = await businessRes.json();
       this.business = businessJson.result?.task;
 
+      if (!this.business) {
+        throw new Error('Business information not found');
+      }
+
       // 2. Fetch services
-      const servicesRes = await fetch(`${this.apiUrl}/api/tasks/${encodeURIComponent(this.bookingsId)}/services`);
+      const servicesRes = await this.makeApiRequest(
+        `${this.apiUrl}/api/tasks/${encodeURIComponent(this.bookingsId)}/services`,
+        {},
+        'Services fetch'
+      );
       const servicesJson = await servicesRes.json();
       this.services = servicesJson.services?.results || [];
+
+      if (this.services.length === 0) {
+        throw new Error('No services available for booking');
+      }
 
       // Select the service by displayName
       this.selectedService = this.services.find(
@@ -332,9 +402,12 @@ export class BookingCard extends LitElement {
       await this.fetchAvailability();
 
     } catch (e) {
-      this.error = 'Failed to load booking data.';
+      const errorMessage = e instanceof Error ? e.message : 'Unknown error occurred';
+      this.error = `Failed to load booking information: ${errorMessage}`;
+      console.error('fetchAll failed:', e);
+    } finally {
+      this.loading = false;
     }
-    this.loading = false;
   }
 
   // Update event handler to use timestamp and staff
@@ -374,6 +447,41 @@ export class BookingCard extends LitElement {
     
     // Optionally refresh availability
     this.fetchAvailability();
+  }
+
+  private handleRetry() {
+    this.isRetrying = true;
+    this.retryCount++;
+    
+    // Reset error state
+    this.error = '';
+    
+    // Retry the main fetch operation
+    this.fetchAll().finally(() => {
+      this.isRetrying = false;
+    });
+  }
+
+  private handleReset() {
+    this.retryCount = 0;
+    this.handleRetry();
+  }
+
+  private renderError() {
+    return html`
+      <div class="card">
+        <error-display
+          title="Unable to Load Booking Information"
+          .message=${this.error}
+          .isRetrying=${this.isRetrying}
+          .retryCount=${this.retryCount}
+          .maxRetries=${this.maxRetries}
+          showResetButton
+          @retry=${this.handleRetry}
+          @reset=${this.handleReset}>
+        </error-display>
+      </div>
+    `;
   }
 
   render() {
@@ -416,19 +524,25 @@ export class BookingCard extends LitElement {
       `;
     }
 
-    if (this.loading) {
+    if (this.loading || this.isRetrying) {
       return html`
         <div class="card">
           <div class="loading">
             <div class="loading-spinner"></div>
-            <div class="loading-text">Loading booking options</div>
-            <div class="loading-subtext">Please wait while we fetch available appointments...</div>
+            <div class="loading-text">
+              ${this.isRetrying ? `Retrying... (${this.retryCount}/${this.maxRetries})` : 'Loading booking options'}
+            </div>
+            <div class="loading-subtext">
+              ${this.isRetrying ? 'Please wait while we try to reconnect...' : 'Please wait while we fetch available appointments...'}
+            </div>
           </div>
         </div>
       `;
     }
     
-    if (this.error) return html`<div class="card">${this.error}</div>`;
+    if (this.error) {
+      return this.renderError();
+    }
 
     return html`
       <div class="card">
