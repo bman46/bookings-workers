@@ -16,6 +16,15 @@ export class BookingTimePicker extends LitElement {
   static styles = css`
     .section { margin-bottom: 18px; }
     .label { font-size: 0.98rem; color: #666; margin-bottom: 6px; font-weight: 500; }
+    .timezone-note {
+      font-size: 0.85rem;
+      color: #888;
+      margin-bottom: 16px;
+      padding: 8px 12px;
+      background: #f8f9fa;
+      border-radius: 6px;
+      border-left: 3px solid #1769ff;
+    }
   `;
 
   private createSelectedDateTime(dateStr: string, timeStr: string): Date {
@@ -133,6 +142,26 @@ export class BookingTimePicker extends LitElement {
     return filteredSlots;
   }
 
+  private getTimezoneDisplayName(): string {
+    // Try to get a user-friendly timezone name
+    if (this.timeZone) {
+      try {
+        // Convert business timezone to a more readable format
+        const sampleDate = new Date();
+        const formatter = new Intl.DateTimeFormat('en-US', {
+          timeZone: this.timeZone,
+          timeZoneName: 'long'
+        });
+        const parts = formatter.formatToParts(sampleDate);
+        const timeZoneName = parts.find(part => part.type === 'timeZoneName')?.value;
+        return timeZoneName || this.timeZone;
+      } catch (error) {
+        return this.timeZone;
+      }
+    }
+    return 'Local time';
+  }
+
   render() {
     return html`
       <div class="section">
@@ -141,7 +170,7 @@ export class BookingTimePicker extends LitElement {
           .times=${this.getSlots('morning')}
           .selectedTime=${this.selectedTime}
           @time-selected=${(e: CustomEvent) => {
-            e.stopPropagation(); // Prevent event from bubbling further
+            e.stopPropagation();
             this.handleTimeSelected(e);
           }}>
         </booking-time-slot>
@@ -152,10 +181,13 @@ export class BookingTimePicker extends LitElement {
           .times=${this.getSlots('afternoon')}
           .selectedTime=${this.selectedTime}
           @time-selected=${(e: CustomEvent) => {
-            e.stopPropagation(); // Prevent event from bubbling further
+            e.stopPropagation();
             this.handleTimeSelected(e);
           }}>
         </booking-time-slot>
+      </div>
+      <div class="timezone-note">
+        Times shown in ${this.getTimezoneDisplayName()}
       </div>
     `;
   }
