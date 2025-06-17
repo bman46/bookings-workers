@@ -39,15 +39,15 @@ const openapi = fromHono(app, {
 openapi.get("/api/tasks/:bookingBusinessesSlug", bookingBusinessesFetch);
 openapi.get("/api/tasks/:bookingBusinessesSlug/services", ServiceList);
 openapi.post(
-  "/solutions/bookingBusinesses/:bookingBusinessesSlug/staffAvailability",
+  "/api/solutions/bookingBusinesses/:bookingBusinessesSlug/staffAvailability",
   StaffAvailabilityFetch
 );
 openapi.get(
-  "/solutions/bookingBusinesses/:bookingBusinessesSlug/customQuestions",
+  "/api/solutions/bookingBusinesses/:bookingBusinessesSlug/customQuestions",
   CustomQuestionsFetch
 );
 openapi.post(
-  "/solutions/bookingBusinesses/:bookingBusinessesSlug/appointments",
+  "/api/solutions/bookingBusinesses/:bookingBusinessesSlug/appointments",
   AppointmentCreate
 );
 

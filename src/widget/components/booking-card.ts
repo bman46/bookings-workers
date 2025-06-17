@@ -173,7 +173,7 @@ export class BookingCard extends LitElement {
 
     try {
       const availRes = await this.makeApiRequest(
-        `${this.apiUrl}/solutions/bookingBusinesses/${encodeURIComponent(this.bookingsId)}/staffAvailability`,
+        `${this.apiUrl}/api/solutions/bookingBusinesses/${encodeURIComponent(this.bookingsId)}/staffAvailability`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -272,7 +272,7 @@ export class BookingCard extends LitElement {
 
     try {
       const availRes = await this.makeApiRequest(
-        `${this.apiUrl}/solutions/bookingBusinesses/${encodeURIComponent(this.bookingsId)}/staffAvailability`,
+        `${this.apiUrl}/api/solutions/bookingBusinesses/${encodeURIComponent(this.bookingsId)}/staffAvailability`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
