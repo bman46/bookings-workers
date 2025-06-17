@@ -33,6 +33,7 @@ CLIENT_SECRET=[Client secret value]
 TENANT_ID=[Directory (tenant) ID]
 CLIENT_ID=[Application (client) ID]
 CLIENT_SECRET=[Client secret value]
+ALLOWED_ORIGINS=[Domain/subdomain that can use this widget],[another (optional) domain/subdomain that can use this widget]
 ```
 4. Embed the widget into your website. Example:
 ```html
