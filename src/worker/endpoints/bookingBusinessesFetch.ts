@@ -47,8 +47,6 @@ export class bookingBusinessesFetch extends OpenAPIRoute {
 		// Retrieve the validated slug
 		const { bookingBusinessesSlug } = data.params;
 
-		console.log("bookingBusinessesSlug:", bookingBusinessesSlug);
-
 		// Fetch from MSFT graph API
 		const jwt = await requestMicrosoftGraphJwt(c.env);
 
