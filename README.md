@@ -1,4 +1,4 @@
-# Microsoft Bookings API
+# Microsoft Bookings Widget
 
 [![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/bman46/bookings-workers.git)
 
