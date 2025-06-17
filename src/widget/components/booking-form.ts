@@ -529,34 +529,14 @@ export class BookingForm extends LitElement {
     this.showNotes = !this.showNotes;
   }
 
-  private formatPhoneNumber(value: string): string {
-    // Remove all non-digit characters
-    const cleaned = value.replace(/\D/g, '');
-    
-    // Format based on length
-    const match = cleaned.match(/^(\d{0,3})(\d{0,3})(\d{0,4})$/);
-    if (!match) return value;
-    
-    const [, area, exchange, number] = match;
-    
-    if (number) {
-      return `(${area}) ${exchange}-${number}`;
-    } else if (exchange) {
-      return `(${area}) ${exchange}`;
-    } else if (area) {
-      return area.length === 3 ? `(${area})` : area;
-    }
-    
-    return cleaned;
-  }
-
   private handlePhoneInput(e: Event) {
     const input = e.target as HTMLInputElement;
     const cursorPosition = input.selectionStart || 0;
     const oldValue = this.customerPhone;
+    const rawInput = input.value;
     
     // Only allow digits - remove any non-digit characters immediately
-    const digitsOnly = input.value.replace(/\D/g, '');
+    const digitsOnly = rawInput.replace(/\D/g, '');
     const newValue = this.formatPhoneNumber(digitsOnly);
     
     this.customerPhone = newValue;
@@ -564,15 +544,82 @@ export class BookingForm extends LitElement {
     // Clear error if it exists
     if (this.errors.phone) delete this.errors.phone;
     
-    // Adjust cursor position after formatting
+    // Better cursor position handling
     this.updateComplete.then(() => {
-      const lengthDiff = newValue.length - oldValue.length;
-      const newCursorPosition = cursorPosition + lengthDiff;
+      let newCursorPosition = cursorPosition;
+      
+      // If we're deleting (new value is shorter), maintain cursor position
+      if (newValue.length < oldValue.length) {
+        // Don't move cursor when deleting
+        newCursorPosition = Math.min(cursorPosition, newValue.length);
+      } else if (newValue.length > rawInput.length) {
+        // If formatting added characters, adjust cursor forward
+        const formatCharsAdded = newValue.length - rawInput.length;
+        newCursorPosition = cursorPosition + formatCharsAdded;
+      }
+      
+      // Ensure cursor doesn't go past the end
+      newCursorPosition = Math.min(newCursorPosition, newValue.length);
+      
+      // Don't place cursor on formatting characters
+      if (newCursorPosition > 0) {
+        const charAtCursor = newValue[newCursorPosition - 1];
+        if (charAtCursor === '(' || charAtCursor === ')' || charAtCursor === ' ' || charAtCursor === '-') {
+          // Move cursor to next digit position
+          for (let i = newCursorPosition; i < newValue.length; i++) {
+            if (/\d/.test(newValue[i])) {
+              newCursorPosition = i + 1;
+              break;
+            }
+          }
+        }
+      }
+      
       input.setSelectionRange(newCursorPosition, newCursorPosition);
     });
   }
 
   private handlePhoneKeydown(e: KeyboardEvent) {
+    const input = e.target as HTMLInputElement;
+    const cursorPosition = input.selectionStart || 0;
+    
+    // Handle backspace specially
+    if (e.key === 'Backspace') {
+      // If cursor is on a formatting character, move it to delete the previous digit
+      if (cursorPosition > 0) {
+        const charBefore = this.customerPhone[cursorPosition - 1];
+        if (charBefore === ')' || charBefore === ' ' || charBefore === '-') {
+          // Find the previous digit and remove it
+          let digitsOnly = this.customerPhone.replace(/\D/g, '');
+          if (digitsOnly.length > 0) {
+            digitsOnly = digitsOnly.slice(0, -1);
+            this.customerPhone = this.formatPhoneNumber(digitsOnly);
+            
+            // Position cursor after the last digit
+            this.updateComplete.then(() => {
+              const newFormatted = this.customerPhone;
+              let newCursorPos = newFormatted.length;
+              
+              // Find the last digit position
+              for (let i = newFormatted.length - 1; i >= 0; i--) {
+                if (/\d/.test(newFormatted[i])) {
+                  newCursorPos = i + 1;
+                  break;
+                }
+              }
+              
+              input.setSelectionRange(newCursorPos, newCursorPos);
+            });
+            
+            // Clear error if it exists
+            if (this.errors.phone) delete this.errors.phone;
+          }
+          e.preventDefault();
+          return;
+        }
+      }
+    }
+    
     // Allow: backspace, delete, tab, escape, enter, home, end, left, right arrow keys
     const allowedKeys = [
       'Backspace', 'Delete', 'Tab', 'Escape', 'Enter', 'Home', 'End', 
@@ -593,6 +640,25 @@ export class BookingForm extends LitElement {
     if (!/^\d$/.test(e.key)) {
       e.preventDefault();
     }
+  }
+
+  private formatPhoneNumber(value: string): string {
+    // Remove all non-digit characters
+    const cleaned = value.replace(/\D/g, '');
+    
+    // Limit to 10 digits
+    const limited = cleaned.slice(0, 10);
+    
+    // Format based on length
+    if (limited.length >= 6) {
+      return `(${limited.slice(0, 3)}) ${limited.slice(3, 6)}-${limited.slice(6)}`;
+    } else if (limited.length >= 3) {
+      return `(${limited.slice(0, 3)}) ${limited.slice(3)}`;
+    } else if (limited.length > 0) {
+      return limited;
+    }
+    
+    return '';
   }
 
   render() {
