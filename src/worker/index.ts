@@ -11,31 +11,22 @@ import { env } from "cloudflare:workers";
 // Start a Hono app
 const app = new Hono<{ Bindings: Env }>();
 
-// Add global CORS middleware
-app.use('*', async (c, next) => {
-  if (c.env.ALLOWED_ORIGINS) {
-    const corsMiddleware = cors({
-      origin: (origin, c) => {
-        const allowedOrigins = c.env.ALLOWED_ORIGINS.split(',').map(o => o.trim());
-        
-        // Allow requests with no origin (like mobile apps or Postman)
-        if (!origin) return true;
-        
-        // Check if the origin is in the allowed list
-        return allowedOrigins.includes(origin);
-      },
-      allowHeaders: ['Content-Type'],
-      allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-      exposeHeaders: ['Content-Length'],
-      maxAge: 600,
-      credentials: false,
-    });
-    
-    return corsMiddleware(c, next);
-  }
-  
-  return next();
-});
+// Enable CORS for all routes, using env.ALLOWED_ORIGINS
+app.use(
+  "*",
+  cors({
+    origin: (origin) => {
+      if (!env.ALLOWED_ORIGINS) {
+        console.log("env.ALLOWED_ORIGINS is null, skipping CORS check.");
+        return "";
+      }
+      const allowed = env.ALLOWED_ORIGINS.split(",").map(o => o.trim());
+      if (allowed.includes("*")) return "*";
+      if (!origin) return "";
+      return allowed.includes(origin) ? origin : "";
+    }
+  })
+);
 
 // Setup OpenAPI registry
 const openapi = fromHono(app, {
