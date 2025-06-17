@@ -7,6 +7,10 @@
 	"name": "bookings-workers",
 	"main": "src/worker/index.ts",
 	"compatibility_date": "2025-06-14",
+	"build": {
+		"command": "npm run build",
+		"watch_dir": "src/"
+	},
 	"observability": {
 		"enabled": true
 	},
