@@ -1,7 +1,8 @@
 import { LitElement, html, css } from 'lit';
 import { property, state } from 'lit/decorators.js';
-import './error-display'; // Import the new error component
+import './error-display';
 import { parseISODuration } from '../utils/isoDuration';
+import { getCustomerTimeZone } from '../utils/timezone';
 
 export class BookingForm extends LitElement {
   @property({ type: Object }) selectedService: any = null;
@@ -369,14 +370,13 @@ export class BookingForm extends LitElement {
     }
 
     this.isSubmitting = true;
-    this.submitError = ''; // Clear any previous errors
+    this.submitError = '';
 
     try {
       // Calculate end time based on service duration
       const startDateTime = new Date(this.selectedTimestamp);
       const serviceDuration = this.selectedService?.defaultDuration || 'PT15M';
       
-      // Parse ISO duration using the utility
       const duration = parseISODuration(serviceDuration);
       let durationMs = 0;
       
@@ -395,23 +395,21 @@ export class BookingForm extends LitElement {
           break;
         default:
           console.warn("Failing over to default");
-          durationMs = 15 * 60 * 1000; // Default 15 minutes
+          durationMs = 15 * 60 * 1000;
       }
       
       const endDateTime = new Date(startDateTime.getTime() + durationMs);
       
-      // Format dates for Microsoft Graph API
       const formatDateTime = (date: Date) => {
-        return date.toISOString().slice(0, 19); // Remove timezone suffix
+        return date.toISOString().slice(0, 19);
       };
       
-      // Use UTC as time zone to match timestamps
       const timeZone = "UTC";
+      const customerTimeZone = getCustomerTimeZone();
       
-      // Build the appointment object matching the backend schema
       const appointmentData = {
         serviceId: this.selectedService?.id,
-        staffMemberIds: this.selectedStaffIds.slice(0, 1), // Only use first staff ID
+        staffMemberIds: this.selectedStaffIds.slice(0, 1),
         startDateTime: {
           dateTime: formatDateTime(startDateTime),
           timeZone: timeZone
@@ -431,11 +429,13 @@ export class BookingForm extends LitElement {
             emailAddress: this.customerEmail,
             phone: this.customerPhone.replace(/\D/g, ''),
             customQuestionAnswers: [],
+            timeZone: customerTimeZone,
           }
         ]
       };
 
-      console.log('Appointment data:', appointmentData);
+      console.log('Appointment data with customer timezone:', appointmentData);
+      console.log('Customer timezone detected as:', customerTimeZone);
 
       const response = await this.makeApiRequest(
         `${this.apiUrl}/solutions/bookingBusinesses/${encodeURIComponent(this.bookingsId)}/appointments`,
@@ -468,7 +468,8 @@ export class BookingForm extends LitElement {
             name: this.customerName,
             phone: this.customerPhone,
             email: this.customerEmail,
-            notes: this.notes || null
+            notes: this.notes || null,
+            timeZone: customerTimeZone
           }
         },
         bubbles: true,
