@@ -6,6 +6,7 @@ import { ServiceList } from "./endpoints/serviceListFetch";
 import { StaffAvailabilityFetch } from "./endpoints/StaffAvailabilityFetch";
 import { CustomQuestionsFetch } from "./endpoints/customQuestionsFetch";
 import { AppointmentCreate } from "./endpoints/appointmentCreate";
+import { env } from "cloudflare:workers";
 
 // Start a Hono app
 const app = new Hono<{ Bindings: Env }>();
@@ -38,7 +39,9 @@ app.use('*', async (c, next) => {
 
 // Setup OpenAPI registry
 const openapi = fromHono(app, {
-  docs_url: "/docs",
+  docs_url: env.DOCS_URL || null,
+  redoc_url: env.REDOCS_URL || null,
+  openapi_url: env.OPENAPI_URL || null
 });
 
 // Register OpenAPI endpoints

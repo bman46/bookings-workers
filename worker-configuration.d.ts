@@ -3,6 +3,10 @@
 // Runtime types generated with workerd@1.20250604.0 2025-06-14 
 declare namespace Cloudflare {
 	interface Env {
+    OPENAPI_URL: string;
+    REDOCS_URL: string;
+    DOCS_URL: string;
+    ALLOWED_ORIGINS: string;
 		TENANT_ID: string;
 		CLIENT_ID: string;
 		CLIENT_SECRET: string;
