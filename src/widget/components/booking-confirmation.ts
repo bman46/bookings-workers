@@ -11,6 +11,8 @@ export class BookingConfirmation extends LitElement {
     .confirmation-container {
       text-align: center;
       padding: 24px;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
     }
 
     .success-icon {
@@ -45,6 +47,7 @@ export class BookingConfirmation extends LitElement {
       padding: 20px;
       margin-bottom: 24px;
       text-align: left;
+      overflow-wrap: break-word;
     }
 
     .appointment-details h4 {
@@ -57,9 +60,11 @@ export class BookingConfirmation extends LitElement {
     .detail-row {
       display: flex;
       justify-content: space-between;
-      align-items: center;
+      align-items: flex-start;
       padding: 8px 0;
       border-bottom: 1px solid #eee;
+      gap: 12px;
+      flex-wrap: wrap;
     }
 
     .detail-row:last-child {
@@ -69,11 +74,17 @@ export class BookingConfirmation extends LitElement {
     .detail-label {
       font-weight: 500;
       color: #666;
+      flex-shrink: 0;
+      min-width: 80px;
     }
 
     .detail-value {
       color: #333;
       font-weight: 500;
+      text-align: right;
+      word-break: break-word;
+      overflow-wrap: break-word;
+      flex: 1;
     }
 
     .email-notice {
@@ -83,8 +94,9 @@ export class BookingConfirmation extends LitElement {
       padding: 16px;
       margin-bottom: 24px;
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       gap: 12px;
+      text-align: left;
     }
 
     .email-notice svg {
@@ -92,12 +104,20 @@ export class BookingConfirmation extends LitElement {
       height: 20px;
       color: #2196f3;
       flex-shrink: 0;
+      margin-top: 2px;
     }
 
     .email-notice-text {
       color: #1976d2;
       font-size: 0.9rem;
       line-height: 1.4;
+      word-break: break-word;
+      overflow-wrap: break-word;
+    }
+
+    .email-notice-text strong {
+      word-break: break-all;
+      overflow-wrap: break-word;
     }
 
     .location-section {
@@ -117,12 +137,16 @@ export class BookingConfirmation extends LitElement {
       border-radius: 8px;
       padding: 16px;
       text-align: left;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
     }
 
     .location-name {
       font-weight: 600;
       color: #333;
       margin-bottom: 8px;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
     }
 
     .done-button {
@@ -137,10 +161,72 @@ export class BookingConfirmation extends LitElement {
       cursor: pointer;
       transition: background-color 0.2s;
       margin-top: 24px;
+      box-sizing: border-box;
     }
 
     .done-button:hover {
       background: #45a049;
+    }
+
+    /* Mobile-specific adjustments */
+    @media (max-width: 480px) {
+      .confirmation-container {
+        padding: 16px;
+      }
+      
+      .confirmation-title {
+        font-size: 1.3rem;
+      }
+      
+      .appointment-details {
+        padding: 16px;
+      }
+      
+      .detail-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+      }
+      
+      .detail-label {
+        min-width: auto;
+      }
+      
+      .detail-value {
+        text-align: left;
+        font-size: 0.95rem;
+      }
+      
+      .email-notice {
+        padding: 12px;
+        flex-direction: column;
+        gap: 8px;
+        text-align: center;
+      }
+      
+      .email-notice svg {
+        align-self: center;
+        margin-top: 0;
+      }
+      
+      .email-notice-text {
+        font-size: 0.85rem;
+      }
+    }
+
+    /* Very small screens */
+    @media (max-width: 320px) {
+      .confirmation-title {
+        font-size: 1.2rem;
+      }
+      
+      .detail-value {
+        font-size: 0.9rem;
+      }
+      
+      .email-notice-text {
+        font-size: 0.8rem;
+      }
     }
   `;
 
