@@ -26,6 +26,6 @@
     "@types/service-worker-mock": "^2.0.4",
     "rollup": "^4.43.0",
     "rollup-plugin-copy": "^3.5.0",
-    "wrangler": "^4.20.0"
+    "wrangler": "^4.59.1"
   }
 }
