@@ -428,7 +428,9 @@ export class BookingForm extends LitElement {
       
       const appointmentData = {
         serviceId: this.selectedService?.id,
-        staffMemberIds: this.selectedStaffIds.slice(0, 1),
+        staffMemberIds: this.selectedStaffIds.length > 0
+          ? this.selectedStaffIds
+          : (this.selectedService?.staffMemberIds || []),
         startDateTime: {
           dateTime: formatDateTimeForTimeZone(startDateTime, businessIanaTimeZone),
           timeZone: businessTimeZone // Keep original format for API
